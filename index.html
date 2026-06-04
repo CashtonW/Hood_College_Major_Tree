@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Academic Major Dependency Trees</title>
+    <style>
+        body { margin: 0; font-family: sans-serif; background: #f4f7f6; overflow: hidden; }
+        .node { cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="controls-panel">
+        <div class="control-group">
+            <label for="categoryFilter">Select View:</label>
+            <select id="categoryFilter">
+                <option value="HOME">Home (No Graph)</option>
+                <option value="CS">Computer Science (B.S.)</option>
+                <option value="MATH">Mathematics (B.A.)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="app-layout">
+        <div class="viewport">
+            <div id="graph-container"></div>
+        </div>
+
+        <div class="checklist-sidebar" id="checklistSidebar">
+            <h3>Degree Progress Checklist</h3>
+            <div class="progress-container">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="checklistProgressFill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text" id="checklistProgressText">0 / 0 Completed</div>
+                <div class="fine-print-status" id="finePrintStatus"></div>
+            </div>
+            <div class="checklist-groups" id="checklistGroupsContainer">
+                <div class="empty-state-message">Please select a degree view option to show requirements checklist.</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        
+        mermaid.initialize({ 
+            startOnLoad: false, 
+            theme: 'neutral',
+            securityLevel: 'loose',
+            flowchart: { rankSpacing: 140, nodeSpacing: 65 }
+        });
+
+        let cachedData = null;
+        let activeGraphNodeIds = [];
+        let mathElective300Ids = [];
+        let mathElective400Ids = [];
+        let currentSelectionMode = "HOME";
+
+        function renderChecklistStructure(selection) {
+            const container = document.getElementById('checklistGroupsContainer');
+            activeGraphNodeIds = [];
+            mathElective300Ids = [];
+            mathElective400Ids = [];
+            currentSelectionMode = selection;
+
+            if (selection === 'HOME') {
+                container.innerHTML = '<div class="empty-state-message">Please select a degree view option to show requirements checklist.</div>';
+                updateChecklistProgress();
+                return;
+            }
+
+            container.innerHTML = '';
+            let segments = {};
+
+            if (selection === 'CS') {
+                const reqs = cachedData.CS.requirements;
+
+                if (reqs.Core_Courses) segments["Core Courses"] = reqs.Core_Courses;
+                if (reqs.Math_Foundation) segments["Math Foundation"] = reqs.Math_Foundation;
+                if (reqs.Electives_and_Labs) segments["Electives and Labs"] = reqs.Electives_and_Labs;
+            } else if (selection === 'MATH') {
+                const reqs = cachedData.MATH.requirements;
+
+                if (reqs.Core_Major_Requirements) segments["Core Requirements"] = reqs.Core_Major_Requirements;
+                if (reqs.Electives_Choose_Two) segments["Electives (Choose Two)"] = reqs.Electives_Choose_Two;
+            }
+
+            Object.keys(segments).forEach(groupTitle => {
+                const groupWrapper = document.createElement('div');
+                groupWrapper.className = 'checklist-group';
+                
+                const heading = document.createElement('h4');
+                heading.textContent = groupTitle;
+                groupWrapper.appendChild(heading);
+
+                segments[groupTitle].forEach(course => {
+                    if (!course.code) return;
+                    const cleanId = course.code.replace(/\s/g, '_');
+                    activeGraphNodeIds.push(cleanId);
+
+                    if (groupTitle.includes("300-Level")) mathElective300Ids.push(cleanId);
+                    if (groupTitle.includes("400-Level")) mathElective400Ids.push(cleanId);
+
+                    const itemRow = document.createElement('div');
+                    itemRow.className = 'checklist-item';
+                    itemRow.id = `chk-row-${cleanId}`;
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `chk-box-${cleanId}`;
+                    checkbox.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        if (typeof window.mermaidNodeClick === 'function') {
+                            window.mermaidNodeClick(cleanId);
+                        }
+                    });
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `chk-box-${cleanId}`;
+                    label.innerHTML = `<strong>${course.code}</strong> - ${course.name || 'Requirement'}`;
+
+                    itemRow.appendChild(checkbox);
+                    itemRow.appendChild(label);
+                    groupWrapper.appendChild(itemRow);
+                });
+
+                container.appendChild(groupWrapper);
+            });
+
+            updateChecklistProgress();
+        }
+
+        function updateChecklistProgress() {
+            const finePrintBox = document.getElementById('finePrintStatus');
+            if (activeGraphNodeIds.length === 0) {
+                document.getElementById('checklistProgressFill').style.width = '0%';
+                document.getElementById('checklistProgressText').textContent = '0 / 0 Courses Completed (0%)';
+                finePrintBox.innerHTML = '';
+                return;
+            }
+
+            let checkedCount = 0;
+            let coreChecked = 0;
+            let totalCoreExpected = activeGraphNodeIds.length - mathElective300Ids.length - mathElective400Ids.length;
+            
+            let electives300Checked = 0;
+            let electives400Checked = 0;
+
+            activeGraphNodeIds.forEach(id => {
+                const box = document.getElementById(`chk-box-${id}`);
+                if (box && box.checked) {
+                    checkedCount++;
+                    if (mathElective300Ids.includes(id)) electives300Checked++;
+                    else if (mathElective400Ids.includes(id)) electives400Checked++;
+                    else coreChecked++;
+                }
+            });
+
+            if (currentSelectionMode === 'MATH') {
+                let totalElectivesSelected = electives300Checked + electives400Checked;
+                let electivesNeededLeft = Math.max(0, 4 - totalElectivesSelected);
+                let missing400Cap = electives400Checked >= 1;
+
+                // Build warning messages based on official degree structure rules
+                let statusHtml = `<div style="margin-top: 8px; font-size:12px; border-top: 1px solid #e2e8f0; padding-top:8px;">`;
+                
+                if (totalElectivesSelected < 4) {
+                    statusHtml += `<p style="color: #d35400;">⚠️ Selected <strong>${totalElectivesSelected}/4</strong> electives. Needs ${electivesNeededLeft} more.</p>`;
+                } else {
+                    statusHtml += `<p style="color: #27ae60;">✅ Selected 4 or more upper-level electives!</p>`;
+                }
+
+                if (!missing400Cap) {
+                    statusHtml += `<p style="color: #c0392b;">❌ <strong>Fine Print Rule:</strong> Must choose at least one 400-level course as part of electives.</p>`;
+                } else {
+                    statusHtml += `<p style="color: #27ae60;">✅ 400-level math elective criteria met.</p>`;
+                }
+                
+                statusHtml += `</div>`;
+                finePrintBox.innerHTML = statusHtml;
+
+                // Adjust the main visual progress ratio mathematically to cap core vs elective structures
+                let completedUnitsScore = coreChecked + Math.min(4, totalElectivesSelected);
+                let maxPossibleTargetUnits = totalCoreExpected + 4;
+                let percentage = Math.round((completedUnitsScore / maxPossibleTargetUnits) * 100);
+
+                document.getElementById('checklistProgressFill').style.width = `${percentage}%`;
+                document.getElementById('checklistProgressText').textContent = `${completedUnitsScore} / ${maxPossibleTargetUnits} Requirements Met (${percentage}%)`;
+
+            } else {
+                // Default handling for CS track
+                finePrintBox.innerHTML = '';
+                const percentage = Math.round((checkedCount / activeGraphNodeIds.length) * 100);
+                document.getElementById('checklistProgressFill').style.width = `${percentage}%`;
+                document.getElementById('checklistProgressText').textContent = `${checkedCount} / ${activeGraphNodeIds.length} Courses Completed (${percentage}%)`;
+            }
+        }
+
+        async function updateView(selection) {
+            const container = document.getElementById('graph-container');
+            if (selection === 'HOME') {
+                container.innerHTML = '';
+                renderChecklistStructure('HOME');
+                return;
+            }
+
+            if (!cachedData) {
+                const response = await fetch('tree_structure.json');
+                cachedData = await response.json();
+            }
+
+            renderChecklistStructure(selection);
+
+            const dependencyMap = {}; 
+            let graphDefinition = 'graph TD;\n'; 
+            let currentViewNodeTitles = {};
+            
+            let targetCourses = [];
+            if (selection === 'CS') {
+                const reqs = cachedData.CS.requirements;
+
+                if (reqs.Core_Courses) targetCourses = targetCourses.concat(reqs.Core_Courses);
+                if (reqs.Math_Foundation) targetCourses = targetCourses.concat(reqs.Math_Foundation);
+                if (reqs.Electives_and_Labs) targetCourses = targetCourses.concat(reqs.Electives_and_Labs);
+            } else if (selection === 'MATH') {
+                const reqs = cachedData.MATH.requirements;
+
+                if (reqs.Core_Major_Requirements) targetCourses = targetCourses.concat(reqs.Core_Major_Requirements);
+                if (reqs.Electives_Choose_Two) targetCourses = targetCourses.concat(reqs.Electives_Choose_Two);
+            }
+
+            targetCourses.forEach(course => {
+                if (course.code) {
+                    const id = course.code.replace(/\s/g, '_');
+                    currentViewNodeTitles[id] = `${course.code}<br/>${course.name || ''}`;
+                }
+            });
+
+            targetCourses.forEach(course => {
+                if (!course.code) return;
+                const id = course.code.replace(/\s/g, '_');
+                if (!dependencyMap[id]) dependencyMap[id] = [];
+                
+                if (course.prerequisites) {
+                    course.prerequisites.forEach(pre => {
+                        const preId = pre.id.replace(/\s/g, '_');
+                        dependencyMap[id].push(preId);
+                        if (!currentViewNodeTitles[preId]) {
+                            currentViewNodeTitles[preId] = pre.id;
+                        }
+                    });
+                }
+            });
+
+            Object.keys(currentViewNodeTitles).forEach(id => {
+                graphDefinition += `  ${id}["${currentViewNodeTitles[id]}"];\n`;
+            });
+
+            Object.keys(dependencyMap).forEach(id => {
+                dependencyMap[id].forEach(parentId => {
+                    graphDefinition += `  ${parentId} --> ${id};\n`;
+                });
+            });
+
+            Object.keys(currentViewNodeTitles).forEach(id => {
+                graphDefinition += `  click ${id} call mermaidNodeClick("${id}");\n`;
+            });
+
+            window.mermaidNodeClick = function(nodeId) {
+                const nodeElements = Array.from(document.querySelectorAll('.node'));
+                const targetNode = nodeElements.find(n => n.id.includes(nodeId));
+                if (!targetNode) return;
+
+                const willBeActive = !targetNode.classList.contains('selected-node');
+                function findDomNode(id) { return nodeElements.find(n => n.id.includes(id)); }
+
+                if (willBeActive) {
+                    function highlightAncestors(id) {
+                        const node = findDomNode(id);
+                        if (node) node.classList.add('selected-node');
+                        
+                        const box = document.getElementById(`chk-box-${id}`);
+                        const row = document.getElementById(`chk-row-${id}`);
+                        if (box) box.checked = true;
+                        if (row) row.classList.add('completed');
+
+                        if (dependencyMap[id]) {
+                            dependencyMap[id].forEach(parentId => {
+                                highlightAncestors(parentId);
+                                const edges = document.querySelectorAll('.edgePath');
+                                edges.forEach(edge => {
+                                    const classes = edge.className.baseVal || edge.className;
+                                    if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${id}`)) {
+                                        const pathElement = edge.querySelector('path');
+                                        if (pathElement) pathElement.classList.add('selected-edge');
+                                    }
+                                });
+                            });
+                        }
+                    }
+                    highlightAncestors(nodeId);
+                } else {
+                    targetNode.classList.remove('selected-node');
+                    const box = document.getElementById(`chk-box-${nodeId}`);
+                    const row = document.getElementById(`chk-row-${nodeId}`);
+                    if (box) box.checked = false;
+                    if (row) row.classList.remove('completed');
+                    
+                    if (dependencyMap[nodeId]) {
+                        dependencyMap[nodeId].forEach(parentId => {
+                            const edges = document.querySelectorAll('.edgePath');
+                            edges.forEach(edge => {
+                                const classes = edge.className.baseVal || edge.className;
+                                if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${nodeId}`)) {
+                                    const pathElement = edge.querySelector('path');
+                                    if (pathElement) pathElement.classList.remove('selected-edge');
+                                }
+                            });
+                        });
+                    }
+
+                    function unhighlightDescendants(parentId) {
+                        Object.keys(dependencyMap).forEach(childId => {
+                            if (dependencyMap[childId].includes(parentId)) {
+                                const childNode = findDomNode(childId);
+                                if (childNode && childNode.classList.contains('selected-node')) {
+                                    childNode.classList.remove('selected-node');
+                                    
+                                    const cBox = document.getElementById(`chk-box-${childId}`);
+                                    const cRow = document.getElementById(`chk-row-${childId}`);
+                                    if (cBox) cBox.checked = false;
+                                    if (cRow) cRow.classList.remove('completed');
+
+                                    const edges = document.querySelectorAll('.edgePath');
+                                    edges.forEach(edge => {
+                                        const classes = edge.className.baseVal || edge.className;
+                                        if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${childId}`)) {
+                                            const pathElement = edge.querySelector('path');
+                                            if (pathElement) pathElement.classList.remove('selected-edge');
+                                        }
+                                    });
+                                    unhighlightDescendants(childId);
+                                }
+                            }
+                        });
+                    }
+                    unhighlightDescendants(nodeId);
+                }
+
+                Object.keys(dependencyMap).forEach(childId => {
+                    const childDomNode = findDomNode(childId);
+                    if (!childDomNode) return;
+
+                    const parentIds = dependencyMap[childId];
+                    if (parentIds.length === 0) return;
+
+                    const allParentsHighlighted = parentIds.every(parentId => {
+                        const parentDomNode = findDomNode(parentId);
+                        return parentDomNode && parentDomNode.classList.contains('selected-node');
+                    });
+
+                    if (allParentsHighlighted) {
+                        childDomNode.classList.add('prereqs-met');
+                    } else {
+                        childDomNode.classList.remove('prereqs-met');
+                    }
+                });
+
+                updateChecklistProgress();
+            };
+
+            container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
+            const element = document.getElementById('graph-engine');
+            await mermaid.run({ nodes: [element] });
+        }
+
+        const filterSelect = document.getElementById('categoryFilter');
+        filterSelect.addEventListener('change', (e) => {
+            updateView(e.target.value);
+        });
+        
+        updateView('HOME');
+        
+    </script>
+</body>
+</html>

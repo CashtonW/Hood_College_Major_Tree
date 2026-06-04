@@ -1,0 +1,245 @@
+{
+    "CS":{
+    "program": "Computer Science (B.S.)",
+    "requirements": {
+        "Core_Courses": [
+            {
+                "code": "CS 201",
+                "name": "Computer Science I",
+                "prerequisites": [
+                    { "id": "MATH 120", "type": "alternative_dotted" },
+                    { "id": "Basic Math Level III", "type": "alternative_dotted" }
+                ]
+            },
+            {
+                "code": "CS 202",
+                "name": "Computer Science II",
+                "prerequisites": [
+                    { "id": "CS 201", "type": "required" },
+                    { "id": "MATH 207", "type": "required" }
+                ]
+            },
+            {
+                "code": "CSIT 203",
+                "name": "Impact of Computers on Society"
+            },
+            {
+                "code": "CS 219",
+                "name": "Advanced Data Structures",
+                "prerequisites": [
+                    { "id": "CS 202", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 226",
+                "name": "Computer Organization and Design",
+                "prerequisites": [
+                    { "id": "CS 201", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 319",
+                "name": "Algorithm Analysis",
+                "prerequisites": [
+                    { "id": "CS 219", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 324",
+                "name": "Principles of Software Engineering",
+                "prerequisites": [
+                    { "id": "CS 219", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 329",
+                "name": "Introduction to Database Management Systems",
+                "prerequisites": [
+                    { "id": "CS 219", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 453",
+                "name": "Data Communications & Networking",
+                "prerequisites": [
+                    { "id": "CS 219", "type": "required" },
+                    { "id": "CS 226", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 464",
+                "name": "Operating Systems",
+                "prerequisites": [
+                    { "id": "CS 219", "type": "required" },
+                    { "id": "CS 226", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 471",
+                "name": "Programming Languages: Their Design and Compilation",
+                "prerequisites": [
+                    { "id": "CS 319", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 474",
+                "name": "Capstone Proseminar",
+                "prerequisites": [
+                    { "id": "CS 324", "type": "required" }
+                ]
+            },
+            {
+                "code": "CS 475",
+                "name": "Senior Project",
+                "prerequisites": [
+                    { "id": "CS 474", "type": "required" }
+                ]
+            }
+        ],
+        "Math_Foundation": [
+            {
+                "code": "MATH 201",
+                "name": "Calculus I"
+            },
+            {
+                "code": "MATH 202",
+                "name": "Calculus II",
+                "prerequisites": [
+                    { "id": "MATH 201", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 207",
+                "name": "Discrete Math"
+            }
+        ],
+        "Electives_and_Labs": [
+            {
+                "code": "CS_ELECTIVE_1",
+                "name": "CS Elective 1 (300+)"
+            },
+            {
+                "code": "CS_ELECTIVE_2",
+                "name": "CS Elective 2 (300+)"
+            },
+            {
+                "code": "CS_ELECTIVE_3",
+                "name": "CS Elective 3 (300+)"
+            },
+            {
+                "code": "LAB_SCIENCE_1",
+                "name": "Lab Science I (BIOL/CHEM/PHYS)"
+            },
+            {
+                "code": "LAB_SCIENCE_2",
+                "name": "Lab Science II (BIOL/CHEM/PHYS)"
+            }
+        ]
+    }
+    
+},
+"MATH":{
+    "program": "Mathematics (B.A.)",
+    "requirements": {
+        "Core_Major_Requirements": [
+            {
+                "code": "CS 201",
+                "name": "Computer Science I"
+            },
+            {
+                "code": "MATH 201",
+                "name": "Calculus I"
+            },
+            {
+                "code": "MATH 202",
+                "name": "Calculus II",
+                "prerequisites": [
+                    { "id": "MATH 201", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 207",
+                "name": "Discrete Math"
+            },
+            {
+                "code": "MATH 213",
+                "name": "Statistical Concepts and Methods"
+            },
+            {
+                "code": "MATH 253",
+                "name": "Multivariable Calculus",
+                "prerequisites": [
+                    { "id": "MATH 202", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 333",
+                "name": "Introduction to Abstract Mathematics",
+                "prerequisites": [
+                    { "id": "MATH 202", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 339",
+                "name": "Linear Algebra",
+                "prerequisites": [
+                    { "id": "MATH 202", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 440",
+                "name": "Introduction to Abstract Algebra",
+                "prerequisites": [
+                    { "id": "MATH 333", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 453",
+                "name": "Introduction to Real Analysis",
+                "prerequisites": [
+                    { "id": "MATH 333", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 470",
+                "name": "Seminar: The History of Mathematics",
+                "prerequisites": [
+                    { "id": "MATH 333", "type": "required" }
+                ]
+            }
+        ],
+        "Electives_Choose_Two": [
+            {
+                "code": "MATH 304",
+                "name": "Differential Equations",
+                "prerequisites": [
+                    { "id": "MATH 202", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 320",
+                "name": "Modeling and Simulation",
+                "prerequisites": [
+                    { "id": "MATH 202", "type": "required" },
+                    { "id": "CS 201", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 351",
+                "name": "Probability and Statistics",
+                "prerequisites": [
+                    { "id": "MATH 253", "type": "required" }
+                ]
+            },
+            {
+                "code": "MATH 456",
+                "name": "Numerical Analysis",
+                "prerequisites": [
+                    { "id": "MATH 253", "type": "required" },
+                    { "id": "MATH 339", "type": "required" }
+                ]
+            }
+        ]
+    }
+}
+}

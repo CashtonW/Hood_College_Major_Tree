@@ -1,0 +1,274 @@
+/* 1. RESET AND LAYOUT */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Setup master container splitting graph and side checklist */
+.app-layout {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    padding-top: 80px;
+    overflow: hidden;
+}
+
+.viewport { 
+    flex: 1;
+    height: 100%;
+    overflow: auto; 
+    background: #f4f7f6; 
+    padding: 50px;
+}
+
+/* 2. NODE APPEARANCE (Default/Unclicked State) */
+/* Apply gray background only to nodes that are NOT clicked and do NOT have prerequisites met */
+.node:not(.selected-node):not(.prereqs-met) rect { 
+    fill: #e0e0e0 !important;           
+    stroke: #999999 !important;         
+    stroke-width: 2px !important; 
+    rx: 5; ry: 5; 
+}
+
+.node:not(.selected-node):not(.prereqs-met) text { 
+    fill: #7f8c8d !important;           
+    font-weight: 500 !important; 
+    font-size: 16px !important; 
+    pointer-events: none; 
+}
+
+/* 2b. PREREQUISITES MET STATE */
+.node.prereqs-met:not(.selected-node) rect {
+    fill: #ffffff !important;           /* Clear off grey back to clean white */
+    stroke: #999999 !important;         
+    stroke-width: 2px !important;       
+}
+
+.node.prereqs-met:not(.selected-node) text {
+    fill: #2c3e50 !important;           /* Return to fully legible clear text color */
+    font-weight: 500 !important;
+}
+
+/* 3. SELECTED/HIGHLIGHTED STATE (Clicked or Ancestor) */
+.node.selected-node rect { 
+    fill: #ffffff !important;           /* White fill when selected/highlighted */
+    stroke: #27ae60 !important;         /* Green border */
+    stroke-width: 4px !important; 
+}
+
+.node.selected-node text { 
+    font-weight: bold !important; 
+    fill: #27ae60 !important;           /* Green text */
+}
+
+/* 4. CONNECTION EDGES */
+.edgePath path { 
+    stroke: #bdc3c7 !important; 
+    stroke-width: 2px !important; 
+}
+
+.edgePath path.selected-edge { 
+    stroke: #27ae60 !important; 
+    stroke-width: 4px !important; 
+}
+
+/* Fading modifiers for unselected departments */
+.node.dimmed-node rect {
+    fill: #f2f2f2 !important;
+    stroke: #e0e0e0 !important;
+    opacity: 0.25;
+}
+.node.dimmed-node text {
+    opacity: 0.15;
+}
+.edgePath.dimmed-edge path {
+    stroke: #e0e0e0 !important;
+    opacity: 0.15;
+}
+
+/* Dropdown Filter & Search Bar Container Styling */
+.controls-panel {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: #ffffff;
+    padding: 10px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    white-space: nowrap;
+}
+
+.control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.controls-panel label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.controls-panel select, 
+.controls-panel input {
+    padding: 6px 12px;
+    font-size: 14px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    background-color: #fff;
+    outline: none;
+}
+
+
+/* ==========================================================================
+   5. CHECKLIST SIDEBAR DESIGN SYSTEM
+   ========================================================================== */
+.checklist-sidebar {
+    width: 380px;
+    height: 100%;
+    background: #ffffff;
+    border-left: 1px solid #e2e8f0;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+
+.checklist-sidebar h3 {
+    font-size: 18px;
+    color: #2c3e50;
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+/* Metrics Progress Engine layout styles */
+.progress-container {
+    margin-bottom: 20px;
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #edf2f7;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: #27ae60;
+    transition: width 0.3s ease-in-out;
+}
+
+.progress-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    text-align: right;
+}
+
+/* Sub-groups and checklist rows */
+.checklist-groups {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.empty-state-message {
+    color: #94a3b8;
+    font-size: 14px;
+    font-style: italic;
+    text-align: center;
+    margin-top: 40px;
+    line-height: 1.5;
+}
+
+.checklist-group {
+    margin-bottom: 24px;
+}
+
+.checklist-group h4 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 4px;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+    transition: all 0.2s ease;
+}
+
+.checklist-item input[type="checkbox"] {
+    margin-top: 3px;
+    cursor: pointer;
+    accent-color: #27ae60;
+    width: 16px;
+    height: 16px;
+}
+
+.checklist-item label {
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.4;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Highlighting changes on completed classes */
+.checklist-item.completed {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.checklist-item.completed label {
+    color: #166534;
+    text-decoration: line-through;
+    opacity: 0.75;
+}
+/* Fine Print Warning Container Box Styles */
+.fine-print-status {
+    background: #ffffff;
+    border-radius: 6px;
+    margin-top: 10px;
+    padding: 2px 4px;
+}
+.fine-print-status p {
+    margin: 4px 0;
+    font-size: 12px;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+#graph-container {
+    min-width: max-content;
+    min-height: max-content;
+    padding: 100px;
+}
+
+.mermaid {
+    min-width: max-content;
+    min-height: max-content;
+}
+
+.mermaid svg {
+    overflow: visible !important;
+}
