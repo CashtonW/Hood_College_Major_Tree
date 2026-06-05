@@ -1,245 +1,597 @@
 {
-    "CS":{
-    "program": "Computer Science (B.S.)",
-    "requirements": {
-        "Core_Courses": [
-            {
-                "code": "CS 201",
-                "name": "Computer Science I",
-                "prerequisites": [
-                    { "id": "MATH 120", "type": "alternative_dotted" },
-                    { "id": "Basic Math Level III", "type": "alternative_dotted" }
-                ]
-            },
-            {
-                "code": "CS 202",
-                "name": "Computer Science II",
-                "prerequisites": [
-                    { "id": "CS 201", "type": "required" },
-                    { "id": "MATH 207", "type": "required" }
-                ]
-            },
-            {
-                "code": "CSIT 203",
-                "name": "Impact of Computers on Society"
-            },
-            {
-                "code": "CS 219",
-                "name": "Advanced Data Structures",
-                "prerequisites": [
-                    { "id": "CS 202", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 226",
-                "name": "Computer Organization and Design",
-                "prerequisites": [
-                    { "id": "CS 201", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 319",
-                "name": "Algorithm Analysis",
-                "prerequisites": [
-                    { "id": "CS 219", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 324",
-                "name": "Principles of Software Engineering",
-                "prerequisites": [
-                    { "id": "CS 219", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 329",
-                "name": "Introduction to Database Management Systems",
-                "prerequisites": [
-                    { "id": "CS 219", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 453",
-                "name": "Data Communications & Networking",
-                "prerequisites": [
-                    { "id": "CS 219", "type": "required" },
-                    { "id": "CS 226", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 464",
-                "name": "Operating Systems",
-                "prerequisites": [
-                    { "id": "CS 219", "type": "required" },
-                    { "id": "CS 226", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 471",
-                "name": "Programming Languages: Their Design and Compilation",
-                "prerequisites": [
-                    { "id": "CS 319", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 474",
-                "name": "Capstone Proseminar",
-                "prerequisites": [
-                    { "id": "CS 324", "type": "required" }
-                ]
-            },
-            {
-                "code": "CS 475",
-                "name": "Senior Project",
-                "prerequisites": [
-                    { "id": "CS 474", "type": "required" }
-                ]
-            }
-        ],
-        "Math_Foundation": [
-            {
-                "code": "MATH 201",
-                "name": "Calculus I"
-            },
-            {
-                "code": "MATH 202",
-                "name": "Calculus II",
-                "prerequisites": [
-                    { "id": "MATH 201", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 207",
-                "name": "Discrete Math"
-            }
-        ],
-        "Electives_and_Labs": [
-            {
-                "code": "CS_ELECTIVE_1",
-                "name": "CS Elective 1 (300+)"
-            },
-            {
-                "code": "CS_ELECTIVE_2",
-                "name": "CS Elective 2 (300+)"
-            },
-            {
-                "code": "CS_ELECTIVE_3",
-                "name": "CS Elective 3 (300+)"
-            },
-            {
-                "code": "LAB_SCIENCE_1",
-                "name": "Lab Science I (BIOL/CHEM/PHYS)"
-            },
-            {
-                "code": "LAB_SCIENCE_2",
-                "name": "Lab Science II (BIOL/CHEM/PHYS)"
-            }
-        ]
+    "CS": {
+        "program": "Computer Science (B.S.)",
+        "requirements": {
+            "Core Courses": [
+                {
+                    "code": "CS 201",
+                    "name": "Computer Science I",
+                    "prerequisites": [
+                        { "id": "MATH 120", "type": "alternative_dotted" },
+                        { "id": "Basic Math Level III", "type": "alternative_dotted" }
+                    ]
+                },
+                {
+                    "code": "CS 202",
+                    "name": "Computer Science II",
+                    "prerequisites": [
+                        { "id": "CS 201", "type": "required" },
+                        { "id": "MATH 207", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CSIT 203",
+                    "name": "Impact of Computers on Society"
+                },
+                {
+                    "code": "CS 219",
+                    "name": "Advanced Data Structures",
+                    "prerequisites": [
+                        { "id": "CS 202", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 226",
+                    "name": "Computer Organization and Design",
+                    "prerequisites": [
+                        { "id": "CS 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 319",
+                    "name": "Algorithm Analysis",
+                    "prerequisites": [
+                        { "id": "CS 219", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 324",
+                    "name": "Principles of Software Engineering",
+                    "prerequisites": [
+                        { "id": "CS 219", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 329",
+                    "name": "Introduction to Database Management Systems",
+                    "prerequisites": [
+                        { "id": "CS 219", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 453",
+                    "name": "Data Communications & Networking",
+                    "prerequisites": [
+                        { "id": "CS 219", "type": "required" },
+                        { "id": "CS 226", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 464",
+                    "name": "Operating Systems",
+                    "prerequisites": [
+                        { "id": "CS 219", "type": "required" },
+                        { "id": "CS 226", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 471",
+                    "name": "Programming Languages: Design & Compilation",
+                    "prerequisites": [
+                        { "id": "CS 319", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 474",
+                    "name": "Capstone Proseminar",
+                    "prerequisites": [
+                        { "id": "CS 324", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 475",
+                    "name": "Senior Project",
+                    "prerequisites": [
+                        { "id": "CS 474", "type": "required" }
+                    ]
+                }
+            ],
+            "Math Foundation": [
+                {
+                    "code": "MATH 201",
+                    "name": "Calculus I"
+                },
+                {
+                    "code": "MATH 202",
+                    "name": "Calculus II",
+                    "prerequisites": [
+                        { "id": "MATH 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 207",
+                    "name": "Discrete Math"
+                }
+            ],
+            "Electives and Labs": [
+                {
+                    "code": "CS_ELECTIVE_1",
+                    "name": "CS Elective 1 (300+)"
+                },
+                {
+                    "code": "CS_ELECTIVE_2",
+                    "name": "CS Elective 2 (300+)"
+                },
+                {
+                    "code": "CS_ELECTIVE_3",
+                    "name": "CS Elective 3 (300+)"
+                },
+                {
+                    "code": "LAB_SCIENCE_1",
+                    "name": "Lab Science I (BIOL/CHEM/PHYS)"
+                },
+                {
+                    "code": "LAB_SCIENCE_2",
+                    "name": "Lab Science II (BIOL/CHEM/PHYS)"
+                }
+            ]
+        }
+    },
+    "MATH": {
+        "program": "Mathematics (B.A.)",
+        "fine_print_type": "MATH_SPECIAL",
+        "requirements": {
+            "Core Major Requirements": [
+                {
+                    "code": "CS 201",
+                    "name": "Computer Science I"
+                },
+                {
+                    "code": "MATH 201",
+                    "name": "Calculus I"
+                },
+                {
+                    "code": "MATH 202",
+                    "name": "Calculus II",
+                    "prerequisites": [
+                        { "id": "MATH 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 207",
+                    "name": "Discrete Math"
+                },
+                {
+                    "code": "MATH 213",
+                    "name": "Statistical Concepts and Methods"
+                },
+                {
+                    "code": "MATH 253",
+                    "name": "Multivariable Calculus",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 333",
+                    "name": "Introduction to Abstract Mathematics",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 339",
+                    "name": "Linear Algebra",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 470",
+                    "name": "Seminar: The History of Mathematics",
+                    "prerequisites": [
+                        { "id": "MATH 333", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 471",
+                    "name": "Research Project in the History of Mathematics",
+                    "prerequisites": [
+                        { "id": "MATH 470", "type": "required" }
+                    ]
+                }
+            ],
+            "Algebra or Analysis Core Option (Choose One)": [
+                {
+                    "code": "MATH 440",
+                    "name": "Introduction to Abstract Algebra",
+                    "prerequisites": [
+                        { "id": "MATH 333", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 453",
+                    "name": "Introduction to Real Analysis",
+                    "prerequisites": [
+                        { "id": "MATH 333", "type": "required" }
+                    ]
+                }
+            ],
+            "Major Electives": [
+                {
+                    "code": "MATH 304",
+                    "name": "Differential Equations",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 313",
+                    "name": "Statistical Modeling",
+                    "prerequisites": [
+                        { "id": "MATH 213", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 320",
+                    "name": "Modeling and Simulation",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" },
+                        { "id": "CS 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 336",
+                    "name": "Introduction to Modern Geometry",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 351",
+                    "name": "Probability and Statistics",
+                    "prerequisites": [
+                        { "id": "MATH 253", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 407",
+                    "name": "Introduction to Graph Theory",
+                    "prerequisites": [
+                        { "id": "MATH 207", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 409",
+                    "name": "Elementary Number Theory",
+                    "prerequisites": [
+                        { "id": "MATH 333", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 456",
+                    "name": "Numerical Analysis",
+                    "prerequisites": [
+                        { "id": "MATH 253", "type": "required" },
+                        { "id": "MATH 339", "type": "required" }
+                    ]
+                }
+            ]
+        }
+    },
+    "DATA_SCI": {
+        "program": "Data Science (B.S.)",
+        "requirements": {
+            "Foundation Requirements": [
+                {
+                    "code": "MATH 201",
+                    "name": "Calculus I"
+                },
+                {
+                    "code": "MATH 213",
+                    "name": "Statistical Concepts and Methods"
+                },
+                {
+                    "code": "CS 201",
+                    "name": "Computer Science I"
+                }
+            ],
+            "Core Specialization": [
+                {
+                    "code": "MATH 339",
+                    "name": "Linear Algebra",
+                    "prerequisites": [
+                        { "id": "MATH 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CS 329",
+                    "name": "Introduction to Database Management Systems",
+                    "prerequisites": [
+                        { "id": "CS 201", "type": "required" }
+                    ]
+                }
+            ]
+        }
+    },"ENGL_CW": {
+        "program": "English (B.A.) - Creative Writing Concentration",
+        "requirements": {
+            "Historical Breadth Pre-1800 (Choose 1 or 2)": [
+                {
+                    "code": "ENGL 307",
+                    "name": "British Literature Only"
+                }
+            ],
+            "Historical Breadth Post-1800 (Choose 1 or 2)": [
+                {
+                    "code": "ENGL 309",
+                    "name": "British Literature After 1800"
+                }
+            ],
+            "Genre Studies (Choose Two Formats)": [
+                {
+                    "code": "ENGL 270",
+                    "name": "Genre Studies: Fiction/Poetry/Drama"
+                },
+                {
+                    "code": "ENGL 229",
+                    "name": "History of Drama and Theatre I"
+                },
+                {
+                    "code": "ENGL 230",
+                    "name": "History of Drama and Theatre II"
+                }
+            ],
+            "Inclusive Voices (Choose One)": [
+                {
+                    "code": "ENGL_INCLUSIVE_VOICE",
+                    "name": "Inclusive Voices Class"
+                }
+            ],
+            "Creative Writing Core & Options (ENGL 219 + 2 Electives)": [
+                {
+                    "code": "ENGL 219",
+                    "name": "Creative Writing Workshop"
+                },
+                {
+                    "code": "ENGL_Elective_1",
+                    "name": "English Elective 1"
+                },
+                {
+                    "code": "ENGL_Elective_2",
+                    "name": "English Elective 2"
+                }
+            ],
+            "Writers of Significance (Choose One)": [
+                {
+                    "code": "ENGL_SIG_AUTHOR",
+                    "name": "Writer of Significance Class"
+                }
+            ],
+            "Theory & Capstone": [
+                {
+                    "code": "ENGL 311",
+                    "name": "Approaches to Literature"
+                },
+                {
+                    "code": "ENGL 470",
+                    "name": "Senior Seminar",
+                    "prerequisites": [ { "id": "ENGL 311", "type": "required" } ]
+                }
+            ]
+        }
+    },
+    "CHEM": {
+        "program": "Chemistry (B.A.)",
+        "requirements": {
+            "Chemistry Core": [
+                {
+                    "code": "CHEM 101",
+                    "name": "General Chemistry I"
+                },
+                {
+                    "code": "CHEM 102",
+                    "name": "General Chemistry II",
+                    "prerequisites": [
+                        { "id": "CHEM 101", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 209",
+                    "name": "Organic Chemistry I",
+                    "prerequisites": [
+                        { "id": "CHEM 102", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 210",
+                    "name": "Organic Chemistry II",
+                    "prerequisites": [
+                        { "id": "CHEM 209", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 215",
+                    "name": "Quantitative Analysis",
+                    "prerequisites": [
+                        { "id": "CHEM 102", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 270",
+                    "name": "Physical Science Literature",
+                    "prerequisites": [
+                        { "id": "CHEM 209", "type": "required" }
+                    ]
+                }
+            ],
+            "Math and Physics Foundation": [
+                {
+                    "code": "MATH 201",
+                    "name": "Calculus I"
+                },
+                {
+                    "code": "MATH 202",
+                    "name": "Calculus II",
+                    "prerequisites": [
+                        { "id": "MATH 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "PHYS 203",
+                    "name": "Introductory Physics I",
+                    "prerequisites": [
+                        { "id": "MATH 201", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "PHYS 204",
+                    "name": "Introductory Physics II",
+                    "prerequisites": [
+                        { "id": "PHYS 203", "type": "required" }
+                    ]
+                }
+            ],
+            "Advanced Chemistry": [
+                {
+                    "code": "CHEM 301",
+                    "name": "Biological Chemistry I",
+                    "prerequisites": [
+                        { "id": "CHEM 210", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 324",
+                    "name": "Instrumental Methods of Analysis",
+                    "prerequisites": [
+                        { "id": "CHEM 210", "type": "required" },
+                        { "id": "CHEM 215", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 431",
+                    "name": "Quantum Mechanics",
+                    "prerequisites": [
+                        { "id": "MATH 202", "type": "required" },
+                        { "id": "PHYS 204", "type": "required" }
+                    ]
+                }
+            ]
+        }
+    },
+    "BIOL": {
+        "program": "Biology (B.A.)",
+        "requirements": {
+            "Introductory & Core Biology": [
+                {
+                    "code": "BIOL 110-129",
+                    "name": "Biological Inquiry"
+                },
+                {
+                    "code": "BIOL 201",
+                    "name": "Evolution and Ecology",
+                    "prerequisites": [
+                        { "id": "BIOL 110-129", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "BIOL 202",
+                    "name": "Physiology of Plants & Animals",
+                    "prerequisites": [
+                        { "id": "BIOL 110-129", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "BIOL 203",
+                    "name": "Introduction to Cell Biology & Genetics",
+                    "prerequisites": [
+                        { "id": "BIOL 110-129", "type": "required" },
+                        { "id": "CHEM 101", "type": "required" }
+                    ]
+                }
+            ],
+            "Chemistry & Math Foundation": [
+                {
+                    "code": "CHEM 101",
+                    "name": "General Chemistry I"
+                },
+                {
+                    "code": "CHEM 102",
+                    "name": "General Chemistry II",
+                    "prerequisites": [
+                        { "id": "CHEM 101", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 209",
+                    "name": "Organic Chemistry I",
+                    "prerequisites": [
+                        { "id": "CHEM 102", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "MATH 213",
+                    "name": "Statistical Concepts and Methods"
+                }
+            ],
+            "Biology Electives (300+)": [
+                {
+                    "code": "BIOL_LAB_ELEC_1",
+                    "name": "Biology Elective w/ Lab (300+)",
+                    "prerequisites": [
+                        { "id": "BIOL 201", "type": "required" },
+                        { "id": "BIOL 202", "type": "required" },
+                        { "id": "BIOL 203", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "BIOL_LAB_ELEC_2",
+                    "name": "Biology Elective w/ Lab (300+)",
+                    "prerequisites": [
+                        { "id": "BIOL 201", "type": "required" },
+                        { "id": "BIOL 202", "type": "required" },
+                        { "id": "BIOL 203", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "BIOL_LAB_ELEC_3",
+                    "name": "Biology Elective w/ Lab (300+)",
+                    "prerequisites": [
+                        { "id": "BIOL 201", "type": "required" },
+                        { "id": "BIOL 202", "type": "required" },
+                        { "id": "BIOL 203", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "BIOL_ELEC_4",
+                    "name": "Biology Elective (300+)",
+                    "prerequisites": [
+                        { "id": "BIOL 201", "type": "required" },
+                        { "id": "BIOL 202", "type": "required" },
+                        { "id": "BIOL 203", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "BIOL_ELEC_5",
+                    "name": "Biology Elective (300+)",
+                    "prerequisites": [
+                        { "id": "BIOL 201", "type": "required" },
+                        { "id": "BIOL 202", "type": "required" },
+                        { "id": "BIOL 203", "type": "required" }
+                    ]
+                }
+            ],
+            "Capstone": [
+                {
+                    "code": "BIOL_CAPSTONE",
+                    "name": "Biology Capstone (BIOL 375, 399, 470, or 499)",
+                    "prerequisites": [
+                        { "id": "BIOL 201", "type": "required" },
+                        { "id": "BIOL 202", "type": "required" },
+                        { "id": "BIOL 203", "type": "required" }
+                    ]
+                }
+            ]
+        }
     }
-    
-},
-"MATH":{
-    "program": "Mathematics (B.A.)",
-    "requirements": {
-        "Core_Major_Requirements": [
-            {
-                "code": "CS 201",
-                "name": "Computer Science I"
-            },
-            {
-                "code": "MATH 201",
-                "name": "Calculus I"
-            },
-            {
-                "code": "MATH 202",
-                "name": "Calculus II",
-                "prerequisites": [
-                    { "id": "MATH 201", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 207",
-                "name": "Discrete Math"
-            },
-            {
-                "code": "MATH 213",
-                "name": "Statistical Concepts and Methods"
-            },
-            {
-                "code": "MATH 253",
-                "name": "Multivariable Calculus",
-                "prerequisites": [
-                    { "id": "MATH 202", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 333",
-                "name": "Introduction to Abstract Mathematics",
-                "prerequisites": [
-                    { "id": "MATH 202", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 339",
-                "name": "Linear Algebra",
-                "prerequisites": [
-                    { "id": "MATH 202", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 440",
-                "name": "Introduction to Abstract Algebra",
-                "prerequisites": [
-                    { "id": "MATH 333", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 453",
-                "name": "Introduction to Real Analysis",
-                "prerequisites": [
-                    { "id": "MATH 333", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 470",
-                "name": "Seminar: The History of Mathematics",
-                "prerequisites": [
-                    { "id": "MATH 333", "type": "required" }
-                ]
-            }
-        ],
-        "Electives_Choose_Two": [
-            {
-                "code": "MATH 304",
-                "name": "Differential Equations",
-                "prerequisites": [
-                    { "id": "MATH 202", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 320",
-                "name": "Modeling and Simulation",
-                "prerequisites": [
-                    { "id": "MATH 202", "type": "required" },
-                    { "id": "CS 201", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 351",
-                "name": "Probability and Statistics",
-                "prerequisites": [
-                    { "id": "MATH 253", "type": "required" }
-                ]
-            },
-            {
-                "code": "MATH 456",
-                "name": "Numerical Analysis",
-                "prerequisites": [
-                    { "id": "MATH 253", "type": "required" },
-                    { "id": "MATH 339", "type": "required" }
-                ]
-            }
-        ]
-    }
-}
 }

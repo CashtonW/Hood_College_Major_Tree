@@ -16,29 +16,20 @@
             <label for="categoryFilter">Select View:</label>
             <select id="categoryFilter">
                 <option value="HOME">Home (No Graph)</option>
-                <option value="CS">Computer Science (B.S.)</option>
-                <option value="MATH">Mathematics (B.A.)</option>
             </select>
+        </div>
+        
+        <div class="top-progress-container" id="topProgressWrapper" style="display: none;">
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="checklistProgressFill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text" id="checklistProgressText">0 / 0 Completed</div>
         </div>
     </div>
 
     <div class="app-layout">
         <div class="viewport">
             <div id="graph-container"></div>
-        </div>
-
-        <div class="checklist-sidebar" id="checklistSidebar">
-            <h3>Degree Progress Checklist</h3>
-            <div class="progress-container">
-                <div class="progress-bar-bg">
-                    <div class="progress-bar-fill" id="checklistProgressFill" style="width: 0%;"></div>
-                </div>
-                <div class="progress-text" id="checklistProgressText">0 / 0 Completed</div>
-                <div class="fine-print-status" id="finePrintStatus"></div>
-            </div>
-            <div class="checklist-groups" id="checklistGroupsContainer">
-                <div class="empty-state-message">Please select a degree view option to show requirements checklist.</div>
-            </div>
         </div>
     </div>
 
@@ -54,199 +45,131 @@
 
         let cachedData = null;
         let activeGraphNodeIds = [];
-        let mathElective300Ids = [];
-        let mathElective400Ids = [];
         let currentSelectionMode = "HOME";
+        let completedNodesTracker = new Set();
 
-        function renderChecklistStructure(selection) {
-            const container = document.getElementById('checklistGroupsContainer');
-            activeGraphNodeIds = [];
-            mathElective300Ids = [];
-            mathElective400Ids = [];
-            currentSelectionMode = selection;
-
-            if (selection === 'HOME') {
-                container.innerHTML = '<div class="empty-state-message">Please select a degree view option to show requirements checklist.</div>';
-                updateChecklistProgress();
-                return;
-            }
-
-            container.innerHTML = '';
-            let segments = {};
-
-            if (selection === 'CS') {
-                const reqs = cachedData.CS.requirements;
-
-                if (reqs.Core_Courses) segments["Core Courses"] = reqs.Core_Courses;
-                if (reqs.Math_Foundation) segments["Math Foundation"] = reqs.Math_Foundation;
-                if (reqs.Electives_and_Labs) segments["Electives and Labs"] = reqs.Electives_and_Labs;
-            } else if (selection === 'MATH') {
-                const reqs = cachedData.MATH.requirements;
-
-                if (reqs.Core_Major_Requirements) segments["Core Requirements"] = reqs.Core_Major_Requirements;
-                if (reqs.Electives_Choose_Two) segments["Electives (Choose Two)"] = reqs.Electives_Choose_Two;
-            }
-
-            Object.keys(segments).forEach(groupTitle => {
-                const groupWrapper = document.createElement('div');
-                groupWrapper.className = 'checklist-group';
+        async function initializeApp() {
+            try {
+                const response = await fetch('tree_structure.json');
+                cachedData = await response.json();
                 
-                const heading = document.createElement('h4');
-                heading.textContent = groupTitle;
-                groupWrapper.appendChild(heading);
-
-                segments[groupTitle].forEach(course => {
-                    if (!course.code) return;
-                    const cleanId = course.code.replace(/\s/g, '_');
-                    activeGraphNodeIds.push(cleanId);
-
-                    if (groupTitle.includes("300-Level")) mathElective300Ids.push(cleanId);
-                    if (groupTitle.includes("400-Level")) mathElective400Ids.push(cleanId);
-
-                    const itemRow = document.createElement('div');
-                    itemRow.className = 'checklist-item';
-                    itemRow.id = `chk-row-${cleanId}`;
-
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.id = `chk-box-${cleanId}`;
-                    checkbox.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        if (typeof window.mermaidNodeClick === 'function') {
-                            window.mermaidNodeClick(cleanId);
-                        }
-                    });
-
-                    const label = document.createElement('label');
-                    label.htmlFor = `chk-box-${cleanId}`;
-                    label.innerHTML = `<strong>${course.code}</strong> - ${course.name || 'Requirement'}`;
-
-                    itemRow.appendChild(checkbox);
-                    itemRow.appendChild(label);
-                    groupWrapper.appendChild(itemRow);
+                const selectElement = document.getElementById('categoryFilter');
+                
+                // Dynamically build the dropdown based on JSON keys
+                Object.keys(cachedData).forEach(key => {
+                    // Safety check: ensure the JSON entry actually has a program name and requirements
+                    if (cachedData[key] && cachedData[key].program) {
+                        const option = document.createElement('option');
+                        option.value = key;
+                        option.textContent = cachedData[key].program;
+                        selectElement.appendChild(option);
+                    }
                 });
-
-                container.appendChild(groupWrapper);
-            });
-
-            updateChecklistProgress();
+            } catch (error) {
+                console.error("Error parsing major data configuration:", error);
+                document.getElementById('graph-container').innerHTML = '<p style="color: red; text-align: center; margin-top: 20px;">Failed to load course data. Please ensure tree_structure.json is formatted correctly.</p>';
+            }
         }
 
-        function updateChecklistProgress() {
-            const finePrintBox = document.getElementById('finePrintStatus');
-            if (activeGraphNodeIds.length === 0) {
-                document.getElementById('checklistProgressFill').style.width = '0%';
-                document.getElementById('checklistProgressText').textContent = '0 / 0 Courses Completed (0%)';
-                finePrintBox.innerHTML = '';
+        function setupActiveCourseIds(selection) {
+            activeGraphNodeIds = [];
+            completedNodesTracker.clear();
+            currentSelectionMode = selection;
+
+            const progressWrapper = document.getElementById('topProgressWrapper');
+            
+            // Safety check for empty or invalid selections
+            if (selection === 'HOME' || !cachedData || !cachedData[selection] || !cachedData[selection].requirements) {
+                progressWrapper.style.display = 'none';
+                updateProgressMetrics();
                 return;
             }
 
-            let checkedCount = 0;
-            let coreChecked = 0;
-            let totalCoreExpected = activeGraphNodeIds.length - mathElective300Ids.length - mathElective400Ids.length;
-            
-            let electives300Checked = 0;
-            let electives400Checked = 0;
+            progressWrapper.style.display = 'flex';
+            const segments = cachedData[selection].requirements;
 
-            activeGraphNodeIds.forEach(id => {
-                const box = document.getElementById(`chk-box-${id}`);
-                if (box && box.checked) {
-                    checkedCount++;
-                    if (mathElective300Ids.includes(id)) electives300Checked++;
-                    else if (mathElective400Ids.includes(id)) electives400Checked++;
-                    else coreChecked++;
-                }
+            // Dynamically count valid courses for the progress bar
+            Object.keys(segments).forEach(groupTitle => {
+                const courseList = segments[groupTitle] || [];
+                courseList.forEach(course => {
+                    if (!course || !course.code) return;
+                    const cleanId = course.code.replace(/\s/g, '_');
+                    activeGraphNodeIds.push(cleanId);
+                });
             });
 
-            if (currentSelectionMode === 'MATH') {
-                let totalElectivesSelected = electives300Checked + electives400Checked;
-                let electivesNeededLeft = Math.max(0, 4 - totalElectivesSelected);
-                let missing400Cap = electives400Checked >= 1;
+            updateProgressMetrics();
+        }
 
-                // Build warning messages based on official degree structure rules
-                let statusHtml = `<div style="margin-top: 8px; font-size:12px; border-top: 1px solid #e2e8f0; padding-top:8px;">`;
-                
-                if (totalElectivesSelected < 4) {
-                    statusHtml += `<p style="color: #d35400;">⚠️ Selected <strong>${totalElectivesSelected}/4</strong> electives. Needs ${electivesNeededLeft} more.</p>`;
-                } else {
-                    statusHtml += `<p style="color: #27ae60;">✅ Selected 4 or more upper-level electives!</p>`;
-                }
-
-                if (!missing400Cap) {
-                    statusHtml += `<p style="color: #c0392b;">❌ <strong>Fine Print Rule:</strong> Must choose at least one 400-level course as part of electives.</p>`;
-                } else {
-                    statusHtml += `<p style="color: #27ae60;">✅ 400-level math elective criteria met.</p>`;
-                }
-                
-                statusHtml += `</div>`;
-                finePrintBox.innerHTML = statusHtml;
-
-                // Adjust the main visual progress ratio mathematically to cap core vs elective structures
-                let completedUnitsScore = coreChecked + Math.min(4, totalElectivesSelected);
-                let maxPossibleTargetUnits = totalCoreExpected + 4;
-                let percentage = Math.round((completedUnitsScore / maxPossibleTargetUnits) * 100);
-
-                document.getElementById('checklistProgressFill').style.width = `${percentage}%`;
-                document.getElementById('checklistProgressText').textContent = `${completedUnitsScore} / ${maxPossibleTargetUnits} Requirements Met (${percentage}%)`;
-
-            } else {
-                // Default handling for CS track
-                finePrintBox.innerHTML = '';
-                const percentage = Math.round((checkedCount / activeGraphNodeIds.length) * 100);
-                document.getElementById('checklistProgressFill').style.width = `${percentage}%`;
-                document.getElementById('checklistProgressText').textContent = `${checkedCount} / ${activeGraphNodeIds.length} Courses Completed (${percentage}%)`;
+        function updateProgressMetrics() {
+            if (activeGraphNodeIds.length === 0 || currentSelectionMode === 'HOME') {
+                document.getElementById('checklistProgressFill').style.width = '0%';
+                document.getElementById('checklistProgressText').textContent = '0 / 0 Completed (0%)';
+                return;
             }
+
+            let checkedCount = completedNodesTracker.size;
+            const percentage = Math.round((checkedCount / activeGraphNodeIds.length) * 100);
+            document.getElementById('checklistProgressFill').style.width = `${percentage}%`;
+            document.getElementById('checklistProgressText').textContent = `${checkedCount} / ${activeGraphNodeIds.length} Passed (${percentage}%)`;
         }
 
         async function updateView(selection) {
             const container = document.getElementById('graph-container');
             if (selection === 'HOME') {
                 container.innerHTML = '';
-                renderChecklistStructure('HOME');
+                setupActiveCourseIds('HOME');
                 return;
             }
 
             if (!cachedData) {
-                const response = await fetch('tree_structure.json');
-                cachedData = await response.json();
+                await initializeApp();
             }
 
-            renderChecklistStructure(selection);
+            setupActiveCourseIds(selection);
 
             const dependencyMap = {}; 
             let graphDefinition = 'graph TD;\n'; 
             let currentViewNodeTitles = {};
             
             let targetCourses = [];
-            if (selection === 'CS') {
-                const reqs = cachedData.CS.requirements;
-
-                if (reqs.Core_Courses) targetCourses = targetCourses.concat(reqs.Core_Courses);
-                if (reqs.Math_Foundation) targetCourses = targetCourses.concat(reqs.Math_Foundation);
-                if (reqs.Electives_and_Labs) targetCourses = targetCourses.concat(reqs.Electives_and_Labs);
-            } else if (selection === 'MATH') {
-                const reqs = cachedData.MATH.requirements;
-
-                if (reqs.Core_Major_Requirements) targetCourses = targetCourses.concat(reqs.Core_Major_Requirements);
-                if (reqs.Electives_Choose_Two) targetCourses = targetCourses.concat(reqs.Electives_Choose_Two);
-            }
-
-            targetCourses.forEach(course => {
-                if (course.code) {
-                    const id = course.code.replace(/\s/g, '_');
-                    currentViewNodeTitles[id] = `${course.code}<br/>${course.name || ''}`;
+            // Safely fall back to an empty object if requirements are missing
+            const segments = cachedData[selection]?.requirements || {}; 
+            
+            Object.keys(segments).forEach(key => {
+                if (Array.isArray(segments[key])) {
+                    targetCourses = targetCourses.concat(segments[key]);
                 }
             });
 
+            // Prevent Mermaid crash if no courses exist
+            if (targetCourses.length === 0) {
+                container.innerHTML = '<p style="text-align: center; margin-top: 20px; color: #7f8c8d;">No courses found for this program.</p>';
+                return;
+            }
+
+            // Phase 1: Register nodes
             targetCourses.forEach(course => {
-                if (!course.code) return;
+                if (course && course.code) {
+                    const id = course.code.replace(/\s/g, '_');
+                    currentViewNodeTitles[id] = `${course.code}<br/>${course.name || 'Elective'}`;
+                }
+            });
+
+            // Phase 2: Map dependencies
+            targetCourses.forEach(course => {
+                if (!course || !course.code) return;
                 const id = course.code.replace(/\s/g, '_');
                 if (!dependencyMap[id]) dependencyMap[id] = [];
                 
-                if (course.prerequisites) {
+                // Safely check if prerequisites exist
+                if (course.prerequisites && Array.isArray(course.prerequisites)) {
                     course.prerequisites.forEach(pre => {
+                        if (!pre || !pre.id) return;
                         const preId = pre.id.replace(/\s/g, '_');
                         dependencyMap[id].push(preId);
+                        
+                        // If a prerequisite isn't explicitly defined as a node, create a fallback node for it
                         if (!currentViewNodeTitles[preId]) {
                             currentViewNodeTitles[preId] = pre.id;
                         }
@@ -254,6 +177,7 @@
                 }
             });
 
+            // Build Mermaid Syntax
             Object.keys(currentViewNodeTitles).forEach(id => {
                 graphDefinition += `  ${id}["${currentViewNodeTitles[id]}"];\n`;
             });
@@ -264,10 +188,12 @@
                 });
             });
 
+            graphDefinition += `\n`;
             Object.keys(currentViewNodeTitles).forEach(id => {
                 graphDefinition += `  click ${id} call mermaidNodeClick("${id}");\n`;
             });
 
+            // Global click handler
             window.mermaidNodeClick = function(nodeId) {
                 const nodeElements = Array.from(document.querySelectorAll('.node'));
                 const targetNode = nodeElements.find(n => n.id.includes(nodeId));
@@ -277,14 +203,11 @@
                 function findDomNode(id) { return nodeElements.find(n => n.id.includes(id)); }
 
                 if (willBeActive) {
+                    // Highlight logic
                     function highlightAncestors(id) {
                         const node = findDomNode(id);
                         if (node) node.classList.add('selected-node');
-                        
-                        const box = document.getElementById(`chk-box-${id}`);
-                        const row = document.getElementById(`chk-row-${id}`);
-                        if (box) box.checked = true;
-                        if (row) row.classList.add('completed');
+                        completedNodesTracker.add(id);
 
                         if (dependencyMap[id]) {
                             dependencyMap[id].forEach(parentId => {
@@ -302,11 +225,9 @@
                     }
                     highlightAncestors(nodeId);
                 } else {
+                    // Unhighlight logic
                     targetNode.classList.remove('selected-node');
-                    const box = document.getElementById(`chk-box-${nodeId}`);
-                    const row = document.getElementById(`chk-row-${nodeId}`);
-                    if (box) box.checked = false;
-                    if (row) row.classList.remove('completed');
+                    completedNodesTracker.delete(nodeId);
                     
                     if (dependencyMap[nodeId]) {
                         dependencyMap[nodeId].forEach(parentId => {
@@ -327,11 +248,7 @@
                                 const childNode = findDomNode(childId);
                                 if (childNode && childNode.classList.contains('selected-node')) {
                                     childNode.classList.remove('selected-node');
-                                    
-                                    const cBox = document.getElementById(`chk-box-${childId}`);
-                                    const cRow = document.getElementById(`chk-row-${childId}`);
-                                    if (cBox) cBox.checked = false;
-                                    if (cRow) cRow.classList.remove('completed');
+                                    completedNodesTracker.delete(childId);
 
                                     const edges = document.querySelectorAll('.edgePath');
                                     edges.forEach(edge => {
@@ -349,6 +266,7 @@
                     unhighlightDescendants(nodeId);
                 }
 
+                // Check prerequisites met logic
                 Object.keys(dependencyMap).forEach(childId => {
                     const childDomNode = findDomNode(childId);
                     if (!childDomNode) return;
@@ -368,12 +286,18 @@
                     }
                 });
 
-                updateChecklistProgress();
+                updateProgressMetrics();
             };
 
-            container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
-            const element = document.getElementById('graph-engine');
-            await mermaid.run({ nodes: [element] });
+            // Render Graph
+            try {
+                container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
+                const element = document.getElementById('graph-engine');
+                await mermaid.run({ nodes: [element] });
+            } catch (renderError) {
+                console.error("Mermaid Render Error:", renderError);
+                container.innerHTML = '<p style="color: red;">Error drawing the graph. Check the console for details.</p>';
+            }
         }
 
         const filterSelect = document.getElementById('categoryFilter');
@@ -381,7 +305,10 @@
             updateView(e.target.value);
         });
         
-        updateView('HOME');
+        (async () => {
+            await initializeApp();
+            updateView('HOME');
+        })();
         
     </script>
 </body>
