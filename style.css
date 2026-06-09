@@ -1,11 +1,54 @@
 /* 1. RESET AND LAYOUT */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+.hood-header {
+    background-color: #003366; 
+    color: #ffffff;
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1010;
+    height: 65px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.hood-logo-text {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #ffffff;
+    font-family: 'Georgia', serif;
+}
+
+.header-divider {
+    width: 2px;
+    height: 25px;
+    background-color: rgba(255, 255, 255, 0.3);
+    margin: 0 20px;
+}
+
+.hood-header h1 {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    color: #f4f7f6;
+}
+
 .app-layout {
     display: flex;
     width: 100vw;
     height: 100vh;
-    padding-top: 80px;
+    padding-top: 145px; 
     overflow: hidden;
 }
 
@@ -13,38 +56,38 @@
     flex: 1;
     height: 100%;
     overflow: auto; 
-    background: #f4f7f6; 
-    padding: 50px;
+    background: #f8fafc; 
+    padding: 40px;
 }
 
-/* 2. NODE APPEARANCE (Default/Unclicked State) */
+/* 2. NODE APPEARANCE (Default/Unclicked/Locked State) */
 .node:not(.selected-node):not(.prereqs-met) rect { 
-    fill: #e0e0e0 !important;           
-    stroke: #999999 !important;         
+    fill: #eaeaea !important;           
+    stroke: #666666 !important;         
     stroke-width: 2px !important; 
-    rx: 5; ry: 5; 
+    rx: 6; ry: 6; 
 }
 
 .node:not(.selected-node):not(.prereqs-met) text { 
-    fill: #7f8c8d !important;           
+    fill: #666666 !important;           
     font-weight: 500 !important; 
-    font-size: 16px !important; 
+    font-size: 14px !important; 
     pointer-events: none; 
 }
 
-/* 2b. PREREQUISITES MET STATE */
+/* 2b. PREREQUISITES MET STATE (Unlocked / Ready to take) */
 .node.prereqs-met:not(.selected-node) rect {
     fill: #ffffff !important;           
-    stroke: #999999 !important;         
+    stroke: #003366 !important;         
     stroke-width: 2px !important;       
 }
 
 .node.prereqs-met:not(.selected-node) text {
-    fill: #2c3e50 !important;           
-    font-weight: 500 !important;
+    fill: #003366 !important;           
+    font-weight: 600 !important;
 }
 
-/* 3. SELECTED/HIGHLIGHTED STATE */
+/* 3. SELECTED/HIGHLIGHTED STATE (Passed) */
 .node.selected-node rect { 
     fill: #ffffff !important;           
     stroke: #27ae60 !important;         
@@ -58,7 +101,7 @@
 
 /* 4. CONNECTION EDGES */
 .edgePath path { 
-    stroke: #bdc3c7 !important; 
+    stroke: #cbd5e1 !important; 
     stroke-width: 2px !important; 
 }
 
@@ -67,67 +110,154 @@
     stroke-width: 4px !important; 
 }
 
-/* Fading modifiers */
-.node.dimmed-node rect {
-    fill: #f2f2f2 !important;
-    stroke: #e0e0e0 !important;
-    opacity: 0.25;
-}
-.node.dimmed-node text {
-    opacity: 0.15;
-}
-.edgePath.dimmed-edge path {
-    stroke: #e0e0e0 !important;
-    opacity: 0.15;
-}
-
 /* Dropdown Filter & Progress Bar Control Panel Styling */
 .controls-panel {
     position: fixed;
-    top: 20px;
+    top: 80px; 
     left: 20px;
     right: 20px;
     z-index: 1000;
-    background: #ffffff;
-    padding: 12px 24px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    padding: 14px 28px;
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 30px;
 }
 
+.left-controls {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
 .control-group {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
 .controls-panel label {
     font-size: 14px;
-    font-weight: 600;
-    color: #2c3e50;
+    font-weight: 700;
+    color: #003366; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .controls-panel select {
-    padding: 8px 14px;
+    padding: 8px 16px;
     font-size: 14px;
-    border: 1px solid #bdc3c7;
+    font-weight: 500;
+    color: #334155;
+    border: 1px solid #cbd5e1;
     border-radius: 6px;
     background-color: #fff;
     outline: none;
-    min-width: 220px;
+    min-width: 260px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
 }
 
-/* ==========================================================================
-   5. TOP RIGHT PROGRESS BAR ENGINE DESIGN
-   ========================================================================== */
+.controls-panel select:focus {
+    border-color: #003366;
+}
+
+/* SEARCH FIELD IMPLEMENTATION WRAPPERS */
+.search-input-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    overflow: hidden;
+    transition: border-color 0.2s ease;
+}
+
+.search-input-container:focus-within {
+    border-color: #003366;
+}
+
+.search-input-container input {
+    border: none;
+    padding: 8px 14px;
+    font-size: 14px;
+    outline: none;
+    color: #334155;
+    width: 140px;
+}
+
+.search-input-container button {
+    border: none;
+    background: #003366;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.search-input-container button:hover {
+    background: #002244;
+}
+
+.search-feedback {
+    font-size: 13px;
+    font-weight: 600;
+    margin-left: 5px;
+    white-space: nowrap;
+}
+
+/* TRANSCRIPT FILE SELECTION CONTROLS */
+.transcript-upload-label {
+    background-color: #003366;
+    color: #ffffff !important;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.transcript-upload-label:hover {
+    background-color: #002244;
+}
+
+/* CLEAR ALL ACTION BUTTON */
+.clear-selection-btn {
+    background-color: transparent;
+    color: #666666; 
+    border: 1px solid #cbd5e1;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+}
+
+.clear-selection-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #666666;
+    color: #003366;
+}
+
+/* 5. TOP RIGHT PROGRESS BAR ENGINE DESIGN */
 .top-progress-container {
     display: flex;
     align-items: center;
     gap: 14px;
-    min-width: 320px;
+    min-width: 340px;
 }
 
 .progress-bar-bg {
@@ -148,16 +278,16 @@
 .progress-text {
     font-size: 13px;
     font-weight: 700;
-    color: #475569;
+    color: #003366; 
     white-space: nowrap;
-    min-width: 90px;
+    min-width: 110px;
     text-align: right;
 }
 
 #graph-container {
     min-width: max-content;
     min-height: max-content;
-    padding: 60px;
+    padding: 40px;
 }
 
 .mermaid {

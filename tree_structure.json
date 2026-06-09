@@ -278,41 +278,6 @@
                 }
             ]
         }
-    },
-    "DATA_SCI": {
-        "program": "Data Science (B.S.)",
-        "requirements": {
-            "Foundation Requirements": [
-                {
-                    "code": "MATH 201",
-                    "name": "Calculus I"
-                },
-                {
-                    "code": "MATH 213",
-                    "name": "Statistical Concepts and Methods"
-                },
-                {
-                    "code": "CS 201",
-                    "name": "Computer Science I"
-                }
-            ],
-            "Core Specialization": [
-                {
-                    "code": "MATH 339",
-                    "name": "Linear Algebra",
-                    "prerequisites": [
-                        { "id": "MATH 201", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 329",
-                    "name": "Introduction to Database Management Systems",
-                    "prerequisites": [
-                        { "id": "CS 201", "type": "required" }
-                    ]
-                }
-            ]
-        }
     },"ENGL_CW": {
         "program": "English (B.A.) - Creative Writing Concentration",
         "requirements": {
@@ -380,14 +345,14 @@
                 }
             ]
         }
-    },
-    "CHEM": {
+    },"CHEM": {
         "program": "Chemistry (B.A.)",
         "requirements": {
-            "Chemistry Core": [
+            "Core Courses": [
                 {
                     "code": "CHEM 101",
-                    "name": "General Chemistry I"
+                    "name": "General Chemistry I",
+                    "prerequisites": []
                 },
                 {
                     "code": "CHEM 102",
@@ -423,18 +388,88 @@
                     "prerequisites": [
                         { "id": "CHEM 209", "type": "required" }
                     ]
+                },
+                {
+                    "code": "CHEM 301",
+                    "name": "Biological Chemistry I",
+                    "prerequisites": [
+                        { "id": "CHEM 210", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 324",
+                    "name": "Instrumental Methods of Analysis",
+                    "prerequisites": [
+                        { "id": "CHEM 215", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 405",
+                    "name": "Inorganic Chemistry",
+                    "prerequisites": [
+                        { "id": "CHEM 210", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 431",
+                    "name": "Quantum Mechanics",
+                    "prerequisites": [
+                        { "id": "CHEM 215", "type": "required" },
+                        { "id": "MATH 202", "type": "required" },
+                        { "id": "PHYS 102", "type": "alternative_dotted" },
+                        { "id": "PHYS 204", "type": "alternative_dotted" }
+                    ]
+                },
+                {
+                    "code": "CHEM 432",
+                    "name": "Thermodynamics & Statistical Mechanics",
+                    "prerequisites": [
+                        { "id": "CHEM 215", "type": "required" },
+                        { "id": "MATH 202", "type": "required" },
+                        { "id": "PHYS 102", "type": "alternative_dotted" },
+                        { "id": "PHYS 204", "type": "alternative_dotted" }
+                    ]
+                },
+                {
+                    "code": "CHEM 433",
+                    "name": "Quantum Mechanics Laboratory",
+                    "prerequisites": [
+                        { "id": "CHEM 431", "type": "required" }
+                    ]
+                },
+                {
+                    "code": "CHEM 434",
+                    "name": "Thermodynamics & Statistical Mechanics Laboratory",
+                    "prerequisites": [
+                        { "id": "CHEM 432", "type": "required" }
+                    ]
                 }
             ],
-            "Math and Physics Foundation": [
+            "Mathematics Requirements": [
                 {
                     "code": "MATH 201",
-                    "name": "Calculus I"
+                    "name": "Calculus I",
+                    "prerequisites": []
                 },
                 {
                     "code": "MATH 202",
                     "name": "Calculus II",
                     "prerequisites": [
                         { "id": "MATH 201", "type": "required" }
+                    ]
+                }
+            ],
+            "Physics Requirements": [
+                {
+                    "code": "PHYS 101",
+                    "name": "General Physics I",
+                    "prerequisites": []
+                },
+                {
+                    "code": "PHYS 102",
+                    "name": "General Physics II",
+                    "prerequisites": [
+                        { "id": "PHYS 101", "type": "required" }
                     ]
                 },
                 {
@@ -448,38 +483,13 @@
                     "code": "PHYS 204",
                     "name": "Introductory Physics II",
                     "prerequisites": [
-                        { "id": "PHYS 203", "type": "required" }
-                    ]
-                }
-            ],
-            "Advanced Chemistry": [
-                {
-                    "code": "CHEM 301",
-                    "name": "Biological Chemistry I",
-                    "prerequisites": [
-                        { "id": "CHEM 210", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 324",
-                    "name": "Instrumental Methods of Analysis",
-                    "prerequisites": [
-                        { "id": "CHEM 210", "type": "required" },
-                        { "id": "CHEM 215", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 431",
-                    "name": "Quantum Mechanics",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" },
-                        { "id": "PHYS 204", "type": "required" }
+                        { "id": "PHYS 203", "type": "required" },
+                        { "id": "MATH 202", "type": "required" }
                     ]
                 }
             ]
         }
-    },
-    "BIOL": {
+    },"BIOL": {
         "program": "Biology (B.A.)",
         "requirements": {
             "Introductory & Core Biology": [
