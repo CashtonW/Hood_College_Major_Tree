@@ -78,6 +78,7 @@
         let currentSelectionMode = "HOME";
         let completedNodesTracker = new Set();
         let currentDependencyMap = {}; 
+        window.triggerReRender = null; // Global hook for re-rendering layouts
 
         async function initializeApp() {
             try {
@@ -161,20 +162,25 @@
 
         function handleClearAllSelections() {
             completedNodesTracker.clear();
-
-            const nodeElements = document.querySelectorAll('.node');
-            nodeElements.forEach(node => {
-                node.classList.remove('selected-node');
-                node.classList.remove('prereqs-met');
-            });
-
-            const paths = document.querySelectorAll('.edgePath path');
-            paths.forEach(path => {
-                path.classList.remove('selected-edge');
-            });
-
             updateProgressMetrics();
             clearSearchEngine();
+
+            // Re-render the graph entirely to restore any nodes that were layout-shifted off screen
+            if (window.triggerReRender && currentSelectionMode !== 'HOME') {
+                window.triggerReRender();
+            } else {
+                // Fallback state clear
+                const nodeElements = document.querySelectorAll('.node');
+                nodeElements.forEach(node => {
+                    node.classList.remove('selected-node');
+                    node.classList.remove('prereqs-met');
+                });
+
+                const paths = document.querySelectorAll('.edgePath path');
+                paths.forEach(path => {
+                    path.classList.remove('selected-edge');
+                });
+            }
         }
 
         function handleCourseSearchExecution() {
@@ -191,9 +197,15 @@
             }
 
             const targetIdString = userInput.toUpperCase().replace(/\s/g, '_').replace('-', '_');
-
             const nodeElements = Array.from(document.querySelectorAll('.node'));
             const destinationDomNode = nodeElements.find(n => n.id.includes(`flowchart-${targetIdString}-`) || n.id === `flowchart-${targetIdString}`);
+
+            // If node was isolated, clicked, and successfully removed from rendering
+            if (!destinationDomNode && completedNodesTracker.has(targetIdString)) {
+                feedbackText.style.color = '#38a169'; 
+                feedbackText.textContent = 'Course is already completed and hidden.';
+                return;
+            }
 
             if (destinationDomNode && typeof window.mermaidNodeClick === 'function') {
                 destinationDomNode.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
@@ -233,18 +245,25 @@
 
                 handleClearAllSelections();
 
+                let needsRender = false;
                 matchedRecords.forEach(cleanId => {
-                    if (activeGraphNodeIds.includes(cleanId)) {
-                        const nodeElements = Array.from(document.querySelectorAll('.node'));
-                        const actualDomNode = nodeElements.find(n => n.id.includes(`flowchart-${cleanId}-`) || n.id === `flowchart-${cleanId}`);
-                        
-                        if (actualDomNode && !actualDomNode.classList.contains('selected-node')) {
-                            if (typeof window.mermaidNodeClick === 'function') {
-                                window.mermaidNodeClick(cleanId);
-                            }
+                    if (activeGraphNodeIds.includes(cleanId) && !completedNodesTracker.has(cleanId)) {
+                        const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(cleanId));
+                        const hasParents = currentDependencyMap[cleanId] && currentDependencyMap[cleanId].length > 0;
+                        const isIsolated = !isParent && !hasParents;
+
+                        if (isIsolated) {
+                            needsRender = true;
+                            if (typeof window.mermaidNodeClick === 'function') window.mermaidNodeClick(cleanId, true); 
+                        } else {
+                            if (typeof window.mermaidNodeClick === 'function') window.mermaidNodeClick(cleanId);
                         }
                     }
                 });
+
+                if (needsRender && window.triggerReRender) {
+                    window.triggerReRender();
+                }
 
             } catch (error) {
                 console.error("Transcript Parsing Error:", error);
@@ -271,9 +290,7 @@
             setupActiveCourseIds(selection);
 
             currentDependencyMap = {}; 
-            let graphDefinition = 'graph TD;\n'; 
             let currentViewNodeTitles = {};
-            
             let targetCourseKeys = [];
             const segments = cachedData.programs[selection]?.requirements || {}; 
             
@@ -317,27 +334,128 @@
                 }
             });
 
-            Object.keys(currentViewNodeTitles).forEach(id => {
-                graphDefinition += `  ${id}["${currentViewNodeTitles[id]}"];\n`;
-            });
-
-            Object.keys(currentDependencyMap).forEach(id => {
-                currentDependencyMap[id].forEach(parentId => {
-                    graphDefinition += `  ${parentId} --> ${id};\n`;
+            // RE-RENDER ENGINE: Wipes and redraws the layout based strictly on data state
+            window.triggerReRender = async function() {
+                let graphDefinition = 'graph TD;\n';
+                
+                // 1. Calculate which nodes survive the culling process
+                const nodesToDraw = Object.keys(currentViewNodeTitles).filter(id => {
+                    const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(id));
+                    const hasParents = currentDependencyMap[id] && currentDependencyMap[id].length > 0;
+                    const isIsolated = !isParent && !hasParents;
+                    
+                    // If it is isolated AND completed, we physically exclude it from the render string
+                    if (isIsolated && completedNodesTracker.has(id)) {
+                        return false;
+                    }
+                    return true;
                 });
-            });
 
-            graphDefinition += `\n`;
-            Object.keys(currentViewNodeTitles).forEach(id => {
-                graphDefinition += `  click ${id} call mermaidNodeClick("${id}");\n`;
-            });
+                if (nodesToDraw.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; margin-top: 40px; color: #38a169; font-weight: bold; font-size: 20px;">All program requirements completed!</p>';
+                    return;
+                }
 
-            window.mermaidNodeClick = function(nodeId) {
+                // 2. Build the syntax string
+                nodesToDraw.forEach(id => {
+                    graphDefinition += `  ${id}["${currentViewNodeTitles[id]}"];\n`;
+                });
+
+                Object.keys(currentDependencyMap).forEach(id => {
+                    if (nodesToDraw.includes(id)) {
+                        currentDependencyMap[id].forEach(parentId => {
+                            if (nodesToDraw.includes(parentId)) {
+                                graphDefinition += `  ${parentId} --> ${id};\n`;
+                            }
+                        });
+                    }
+                });
+
+                graphDefinition += `\n`;
+                nodesToDraw.forEach(id => {
+                    graphDefinition += `  click ${id} call mermaidNodeClick("${id}");\n`;
+                });
+
+                // 3. Mount to DOM
+                try {
+                    container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
+                    const element = document.getElementById('graph-engine');
+                    await mermaid.run({ nodes: [element] });
+                    applyGraphState(); // Restore styling to surviving nodes
+                } catch (renderError) {
+                    console.error("Mermaid Render Error:", renderError);
+                    container.innerHTML = '<p style="color: #003366; font-weight: bold; padding: 20px;">Error drawing the dynamic chart. Verify structural constraints.</p>';
+                }
+            };
+
+            // STATE RESTORATION ENGINE: Restores visual progress after a layout wipe
+            function applyGraphState() {
+                const nodeElements = Array.from(document.querySelectorAll('.node'));
+                
+                // Restore node highlights
+                completedNodesTracker.forEach(id => {
+                    const nodeDom = nodeElements.find(n => n.id === `flowchart-${id}` || n.id.includes(`flowchart-${id}-`));
+                    if (nodeDom) nodeDom.classList.add('selected-node');
+                });
+
+                // Restore pathway lines
+                const edges = document.querySelectorAll('.edgePath');
+                Object.keys(currentDependencyMap).forEach(childId => {
+                    if (completedNodesTracker.has(childId)) {
+                        currentDependencyMap[childId].forEach(parentId => {
+                            if (completedNodesTracker.has(parentId)) {
+                                edges.forEach(edge => {
+                                    const classes = edge.className.baseVal || edge.className;
+                                    if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${childId}`)) {
+                                        const pathElement = edge.querySelector('path');
+                                        if (pathElement) pathElement.classList.add('selected-edge');
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Restore "Ready to Take" orange highlights
+                Object.keys(currentDependencyMap).forEach(childId => {
+                    const childDomNode = nodeElements.find(n => n.id === `flowchart-${childId}` || n.id.includes(`flowchart-${childId}-`));
+                    if (!childDomNode) return;
+
+                    const parentIds = currentDependencyMap[childId];
+                    if (parentIds.length === 0) return;
+
+                    const allParentsHighlighted = parentIds.every(parentId => completedNodesTracker.has(parentId));
+                    if (allParentsHighlighted) {
+                        childDomNode.classList.add('prereqs-met');
+                    }
+                });
+
+                updateProgressMetrics();
+            }
+
+            // Central Click Manager
+            window.mermaidNodeClick = function(nodeId, skipRender = false) {
+                const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(nodeId));
+                const hasParents = currentDependencyMap[nodeId] && currentDependencyMap[nodeId].length > 0;
+                const isIsolated = !isParent && !hasParents;
+                
+                const willBeActive = !completedNodesTracker.has(nodeId);
+
+                // If isolated node clicked: mark complete and trigger structural resize
+                if (isIsolated && willBeActive) {
+                    completedNodesTracker.add(nodeId);
+                    updateProgressMetrics();
+                    if (!skipRender && window.triggerReRender) {
+                        window.triggerReRender();
+                    }
+                    return;
+                }
+
+                // Standard Node Fast-DOM handling
                 const nodeElements = Array.from(document.querySelectorAll('.node'));
                 const targetNode = nodeElements.find(n => n.id.includes(nodeId));
                 if (!targetNode) return;
 
-                const willBeActive = !targetNode.classList.contains('selected-node');
                 function findDomNode(id) { return nodeElements.find(n => n.id.includes(id)); }
 
                 if (willBeActive) {
@@ -424,14 +542,7 @@
                 updateProgressMetrics();
             };
 
-            try {
-                container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
-                const element = document.getElementById('graph-engine');
-                await mermaid.run({ nodes: [element] });
-            } catch (renderError) {
-                console.error("Mermaid Render Error:", renderError);
-                container.innerHTML = '<p style="color: #003366; font-weight: bold; padding: 20px;">Error drawing the dynamic chart. Verify structural constraints.</p>';
-            }
+            await window.triggerReRender();
         }
 
         const filterSelect = document.getElementById('categoryFilter');
