@@ -86,11 +86,11 @@
                 
                 const selectElement = document.getElementById('categoryFilter');
                 
-                Object.keys(cachedData).forEach(key => {
-                    if (cachedData[key] && cachedData[key].program) {
+                Object.keys(cachedData.programs).forEach(key => {
+                    if (cachedData.programs[key] && cachedData.programs[key].program) {
                         const option = document.createElement('option');
                         option.value = key;
-                        option.textContent = cachedData[key].program;
+                        option.textContent = cachedData.programs[key].program;
                         selectElement.appendChild(option);
                     }
                 });
@@ -111,7 +111,7 @@
             const clearBtn = document.getElementById('clearAllBtn');
             clearSearchEngine();
             
-            if (selection === 'HOME' || !cachedData || !cachedData[selection] || !cachedData[selection].requirements) {
+            if (selection === 'HOME' || !cachedData || !cachedData.programs[selection] || !cachedData.programs[selection].requirements) {
                 progressWrapper.style.display = 'none';
                 searchWrapper.style.display = 'none';
                 transcriptWrapper.style.display = 'none';
@@ -124,15 +124,14 @@
             searchWrapper.style.display = 'flex';
             transcriptWrapper.style.display = 'flex';
             clearBtn.style.display = 'inline-block';
-            const segments = cachedData[selection].requirements;
+            const segments = cachedData.programs[selection].requirements;
 
             Object.keys(segments).forEach(groupTitle => {
-                const courseList = segments[groupTitle] || [];
-                courseList.forEach(course => {
-                    if (!course || !course.code) return;
-                    const cleanId = course.code.replace(/\s/g, '_');
-                    if (!activeGraphNodeIds.includes(cleanId)) {
-                        activeGraphNodeIds.push(cleanId);
+                const courseKeysList = segments[groupTitle] || [];
+                courseKeysList.forEach(courseKey => {
+                    if (!courseKey) return;
+                    if (!activeGraphNodeIds.includes(courseKey)) {
+                        activeGraphNodeIds.push(courseKey);
                     }
                 });
             });
@@ -191,7 +190,7 @@
                 return;
             }
 
-            const targetIdString = userInput.toUpperCase().replace(/\s/g, '_');
+            const targetIdString = userInput.toUpperCase().replace(/\s/g, '_').replace('-', '_');
 
             const nodeElements = Array.from(document.querySelectorAll('.node'));
             const destinationDomNode = nodeElements.find(n => n.id.includes(`flowchart-${targetIdString}-`) || n.id === `flowchart-${targetIdString}`);
@@ -221,7 +220,7 @@
                     fullExtractedText += pageText + '\n';
                 }
 
-                const courseRegex = /([A-Z]{2,4})\s+(\d{3}[A-Z]?)/g;
+                const courseRegex = /([A-Z]{2,4})\s+(\d{3}(?:-\d{3})?[A-Z]?)/g;
                 let matchedRecords = [];
                 let match;
 
@@ -275,40 +274,44 @@
             let graphDefinition = 'graph TD;\n'; 
             let currentViewNodeTitles = {};
             
-            let targetCourses = [];
-            const segments = cachedData[selection]?.requirements || {}; 
+            let targetCourseKeys = [];
+            const segments = cachedData.programs[selection]?.requirements || {}; 
             
             Object.keys(segments).forEach(key => {
                 if (Array.isArray(segments[key])) {
-                    targetCourses = targetCourses.concat(segments[key]);
+                    targetCourseKeys = targetCourseKeys.concat(segments[key]);
                 }
             });
 
-            if (targetCourses.length === 0) {
+            if (targetCourseKeys.length === 0) {
                 container.innerHTML = '<p style="text-align: center; margin-top: 20px; color: #666666;">No courses found for this program.</p>';
                 return;
             }
 
-            targetCourses.forEach(course => {
-                if (course && course.code) {
-                    const id = course.code.replace(/\s/g, '_');
-                    currentViewNodeTitles[id] = `${course.code}<br/>${course.name || 'Elective'}`;
+            targetCourseKeys.forEach(courseKey => {
+                const courseMeta = cachedData.courses[courseKey];
+                if (courseMeta) {
+                    const visualLabel = courseKey.replace('_', ' ');
+                    currentViewNodeTitles[courseKey] = `${visualLabel}<br/>${courseMeta.name || 'Elective'}`;
                 }
             });
 
-            targetCourses.forEach(course => {
-                if (!course || !course.code) return;
-                const id = course.code.replace(/\s/g, '_');
-                if (!currentDependencyMap[id]) currentDependencyMap[id] = [];
+            targetCourseKeys.forEach(courseKey => {
+                const courseMeta = cachedData.courses[courseKey];
+                if (!courseMeta) return;
+
+                if (!currentDependencyMap[courseKey]) currentDependencyMap[courseKey] = [];
                 
-                if (course.prerequisites && Array.isArray(course.prerequisites)) {
-                    course.prerequisites.forEach(pre => {
+                if (courseMeta.prerequisites && Array.isArray(courseMeta.prerequisites)) {
+                    courseMeta.prerequisites.forEach(pre => {
                         if (!pre || !pre.id) return;
-                        const preId = pre.id.replace(/\s/g, '_');
-                        currentDependencyMap[id].push(preId);
+                        currentDependencyMap[courseKey].push(pre.id);
                         
-                        if (!currentViewNodeTitles[preId]) {
-                            currentViewNodeTitles[preId] = pre.id;
+                        if (!currentViewNodeTitles[pre.id]) {
+                            const fallbackLabel = pre.id.replace('_', ' ');
+                            const globalMeta = cachedData.courses[pre.id];
+                            const fallbackName = globalMeta ? globalMeta.name : 'Prerequisite Course';
+                            currentViewNodeTitles[pre.id] = `${fallbackLabel}<br/>${fallbackName}`;
                         }
                     });
                 }

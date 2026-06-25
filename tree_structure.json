@@ -1,607 +1,333 @@
 {
-    "CS": {
-        "program": "Computer Science (B.S.)",
-        "requirements": {
-            "Core Courses": [
-                {
-                    "code": "CS 201",
-                    "name": "Computer Science I",
-                    "prerequisites": [
-                        { "id": "MATH 120", "type": "alternative_dotted" },
-                        { "id": "Basic Math Level III", "type": "alternative_dotted" }
-                    ]
-                },
-                {
-                    "code": "CS 202",
-                    "name": "Computer Science II",
-                    "prerequisites": [
-                        { "id": "CS 201", "type": "required" },
-                        { "id": "MATH 207", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CSIT 203",
-                    "name": "Impact of Computers on Society"
-                },
-                {
-                    "code": "CS 219",
-                    "name": "Advanced Data Structures",
-                    "prerequisites": [
-                        { "id": "CS 202", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 226",
-                    "name": "Computer Organization and Design",
-                    "prerequisites": [
-                        { "id": "CS 201", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 319",
-                    "name": "Algorithm Analysis",
-                    "prerequisites": [
-                        { "id": "CS 219", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 324",
-                    "name": "Principles of Software Engineering",
-                    "prerequisites": [
-                        { "id": "CS 219", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 329",
-                    "name": "Introduction to Database Management Systems",
-                    "prerequisites": [
-                        { "id": "CS 219", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 453",
-                    "name": "Data Communications & Networking",
-                    "prerequisites": [
-                        { "id": "CS 219", "type": "required" },
-                        { "id": "CS 226", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 464",
-                    "name": "Operating Systems",
-                    "prerequisites": [
-                        { "id": "CS 219", "type": "required" },
-                        { "id": "CS 226", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 471",
-                    "name": "Programming Languages: Design & Compilation",
-                    "prerequisites": [
-                        { "id": "CS 319", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 474",
-                    "name": "Capstone Proseminar",
-                    "prerequisites": [
-                        { "id": "CS 324", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CS 475",
-                    "name": "Senior Project",
-                    "prerequisites": [
-                        { "id": "CS 474", "type": "required" }
-                    ]
-                }
-            ],
-            "Math Foundation": [
-                {
-                    "code": "MATH 201",
-                    "name": "Calculus I"
-                },
-                {
-                    "code": "MATH 202",
-                    "name": "Calculus II",
-                    "prerequisites": [
-                        { "id": "MATH 201", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 207",
-                    "name": "Discrete Math"
-                }
-            ],
-            "Electives and Labs": [
-                {
-                    "code": "CS_ELECTIVE_1",
-                    "name": "CS Elective 1 (300+)"
-                },
-                {
-                    "code": "CS_ELECTIVE_2",
-                    "name": "CS Elective 2 (300+)"
-                },
-                {
-                    "code": "CS_ELECTIVE_3",
-                    "name": "CS Elective 3 (300+)"
-                },
-                {
-                    "code": "LAB_SCIENCE_1",
-                    "name": "Lab Science I (BIOL/CHEM/PHYS)"
-                },
-                {
-                    "code": "LAB_SCIENCE_2",
-                    "name": "Lab Science II (BIOL/CHEM/PHYS)"
-                }
-            ]
-        }
+    "courses": {
+        "CS_201": { "name": "Computer Science I", "prerequisites": [{ "id": "MATH_120", "type": "alternative_dotted" }, { "id": "Basic_Math_Level_III", "type": "alternative_dotted" }] },
+        "CS_202": { "name": "Computer Science II", "prerequisites": [{ "id": "CS_201", "type": "required" }, { "id": "MATH_207", "type": "required" }] },
+        "CSIT_203": { "name": "Impact of Computers on Society", "prerequisites": [] },
+        "CS_219": { "name": "Advanced Data Structures", "prerequisites": [{ "id": "CS_202", "type": "required" }] },
+        "CS_226": { "name": "Computer Organization and Design", "prerequisites": [{ "id": "CS_201", "type": "required" }] },
+        "CS_319": { "name": "Algorithm Analysis", "prerequisites": [{ "id": "CS_219", "type": "required" }] },
+        "CS_324": { "name": "Principles of Software Engineering", "prerequisites": [{ "id": "CS_219", "type": "required" }] },
+        "CS_329": { "name": "Introduction to Database Management Systems", "prerequisites": [{ "id": "CS_219", "type": "required" }] },
+        "CS_453": { "name": "Data Communications & Networking", "prerequisites": [{ "id": "CS_219", "type": "required" }, { "id": "CS_226", "type": "required" }] },
+        "CS_464": { "name": "Operating Systems", "prerequisites": [{ "id": "CS_219", "type": "required" }, { "id": "CS_226", "type": "required" }] },
+        "CS_471": { "name": "Programming Languages: Design & Compilation", "prerequisites": [{ "id": "CS_319", "type": "required" }] },
+        "CS_474": { "name": "Capstone Proseminar", "prerequisites": [{ "id": "CS_324", "type": "required" }] },
+        "CS_475": { "name": "Senior Project", "prerequisites": [{ "id": "CS_474", "type": "required" }] },
+        "MATH_098": { "name": "Algebra Review I", "prerequisites": [] },
+        "MATH_099": { "name": "Algebra Review II", "prerequisites": [{ "id": "MATH_098", "type": "required" }] },
+        "MATH_112": { "name": "Applied Statistics", "prerequisites": [] },
+        "MATH_120": { "name": "Precalculus Mathematics", "prerequisites": [{ "id": "MATH_099", "type": "required" }] },
+        "MATH_201": { "name": "Calculus I", "prerequisites": [] },
+        "MATH_202": { "name": "Calculus II", "prerequisites": [{ "id": "MATH_201", "type": "required" }] },
+        "MATH_207": { "name": "Discrete Math", "prerequisites": [] },
+        "CS_ELECTIVE_1": { "name": "CS Elective 1 (300+)", "prerequisites": [] },
+        "CS_ELECTIVE_2": { "name": "CS Elective 2 (300+)", "prerequisites": [] },
+        "CS_ELECTIVE_3": { "name": "CS Elective 3 (300+)", "prerequisites": [] },
+        "LAB_SCIENCE_1": { "name": "Lab Science I (BIOL/CHEM/PHYS)", "prerequisites": [] },
+        "LAB_SCIENCE_2": { "name": "Lab Science II (BIOL/CHEM/PHYS)", "prerequisites": [] },
+        "MATH_213": { "name": "Statistical Concepts and Methods", "prerequisites": [] },
+        "MATH_253": { "name": "Multivariable Calculus", "prerequisites": [{ "id": "MATH_202", "type": "required" }] },
+        "MATH_333": { "name": "Introduction to Abstract Mathematics", "prerequisites": [{ "id": "MATH_202", "type": "required" }] },
+        "MATH_339": { "name": "Linear Algebra", "prerequisites": [{ "id": "MATH_202", "type": "required" }] },
+        "MATH_470": { "name": "Seminar: The History of Mathematics", "prerequisites": [{ "id": "MATH_333", "type": "required" }] },
+        "MATH_471": { "name": "Research Project in the History of Mathematics", "prerequisites": [{ "id": "MATH_470", "type": "required" }] },
+        "MATH_440": { "name": "Introduction to Abstract Algebra", "prerequisites": [{ "id": "MATH_333", "type": "required" }] },
+        "MATH_453": { "name": "Introduction to Real Analysis", "prerequisites": [{ "id": "MATH_333", "type": "required" }] },
+        "MATH_304": { "name": "Differential Equations", "prerequisites": [{ "id": "MATH_202", "type": "required" }] },
+        "MATH_313": { "name": "Statistical Modeling", "prerequisites": [{ "id": "MATH_213", "type": "required" }] },
+        "MATH_320": { "name": "Modeling and Simulation", "prerequisites": [{ "id": "MATH_202", "type": "required" }, { "id": "CS_201", "type": "required" }] },
+        "MATH_336": { "name": "Introduction to Modern Geometry", "prerequisites": [{ "id": "MATH_202", "type": "required" }] },
+        "MATH_351": { "name": "Probability and Statistics", "prerequisites": [{ "id": "MATH_253", "type": "required" }] },
+        "MATH_407": { "name": "Introduction to Graph Theory", "prerequisites": [{ "id": "MATH_207", "type": "required" }] },
+        "MATH_409": { "name": "Elementary Number Theory", "prerequisites": [{ "id": "MATH_333", "type": "required" }] },
+        "MATH_456": { "name": "Numerical Analysis", "prerequisites": [{ "id": "MATH_253", "type": "required" }, { "id": "MATH_339", "type": "required" }] },
+        "MGMT_205": { "name": "Principles of Management: Introduction to Organizations", "prerequisites": [] },
+        "MGMT_281": { "name": "Principles of Financial Accounting", "prerequisites": [] },
+        "MGMT_284": { "name": "Principles of Managerial Accounting", "prerequisites": [{ "id": "MGMT_281", "type": "required" }] },
+        "MGMT_301": { "name": "Organizational Theory and Behavior", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "MGMT_306": { "name": "Principles of Marketing", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "MGMT_307": { "name": "Personnel Management", "prerequisites": [{ "id": "MGMT_301", "type": "required" }] },
+        "MGMT_312": { "name": "Analytical Methods of Management", "prerequisites": [{ "id": "MATH_112", "type": "required" }, { "id": "ECMG_212", "type": "alternative_dotted" }, { "id": "MGMT_205", "type": "required" }, { "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "alternative_dotted" }] },
+        "MGMT_313": { "name": "Employment and Labor Law", "prerequisites": [{ "id": "MGMT_205", "type": "required" }, { "id": "MGMT_307", "type": "required" }] },
+        "MGMT_314": { "name": "International Business", "prerequisites": [{ "id": "MGMT_205", "type": "required" }, { "id": "ECON_206", "type": "required" }] },
+        "MGMT_315": { "name": "Managing Nonprofit Organizations", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "MGMT_318": { "name": "Social Entrepreneurship I", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "MGMT_319": { "name": "Social Entrepreneurship II", "prerequisites": [{ "id": "MGMT_318", "type": "required" }] },
+        "MGMT_321": { "name": "Intermediate Accounting I", "prerequisites": [{ "id": "MGMT_284", "type": "required" }] },
+        "MGMT_322": { "name": "Intermediate Accounting II", "prerequisites": [{ "id": "MGMT_321", "type": "required" }] },
+        "MGMT_323": { "name": "Personal Financial Planning", "prerequisites": [{ "id": "MGMT_284", "type": "required" }, { "id": "ECMG_303", "type": "required" }] },
+        "MGMT_324": { "name": "ESG Investing and Sustainable Portfolios", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "MGMT_325": { "name": "Sports Sales, Sponsorship & Marketing", "prerequisites": [{ "id": "MGMT_205", "type": "required" }, { "id": "MGMT_306", "type": "required" }] },
+        "MGMT_331": { "name": "Auditing", "prerequisites": [{ "id": "MGMT_321", "type": "required" }, { "id": "MGMT_322", "type": "required" }] },
+        "MGMT_335": { "name": "Teaching Assistantship in Management", "prerequisites": [] },
+        "MGMT_350": { "name": "Business and Social Forces", "prerequisites": [{ "id": "MGMT_205", "type": "required" }, { "id": "MGMT_301", "type": "required" }, { "id": "ECON_205", "type": "required" }] },
+        "MGMT_370": { "name": "Investment Practicum", "prerequisites": [] },
+        "MGMT_375": { "name": "Independent Study", "prerequisites": [] },
+        "MGMT_397": { "name": "Special Topics", "prerequisites": [] },
+        "MGMT_399": { "name": "Internship in Management", "prerequisites": [] },
+        "MGMT_402": { "name": "Business Finance", "prerequisites": [{ "id": "ECMG_303", "type": "required" }] },
+        "MGMT_406": { "name": "Consumer Behavior and Analysis", "prerequisites": [{ "id": "MGMT_306", "type": "required" }] },
+        "MGMT_410": { "name": "Investment Analysis", "prerequisites": [{ "id": "ECMG_303", "type": "required" }] },
+        "MGMT_411": { "name": "Seminar in Strategic Management", "prerequisites": [{ "id": "MGMT_205", "type": "required" }, { "id": "MGMT_306", "type": "required" }, { "id": "ECMG_303", "type": "required" }] },
+        "MGMT_423": { "name": "Marketing Research Methods", "prerequisites": [{ "id": "MGMT_306", "type": "required" }, { "id": "MATH_112", "type": "required" }, { "id": "ECMG_212", "type": "alternative_dotted" }] },
+        "MGMT_424": { "name": "Marketing Communications Strategy", "prerequisites": [{ "id": "MGMT_306", "type": "required" }] },
+        "MGMT_426": { "name": "Fixed Income Securities", "prerequisites": [{ "id": "ECMG_303", "type": "required" }] },
+        "MGMT_427": { "name": "Financial Derivative Securities", "prerequisites": [{ "id": "ECMG_303", "type": "required" }] },
+        "MGMT_432": { "name": "Advanced Accounting", "prerequisites": [{ "id": "ECMG_303", "type": "required" }, { "id": "MGMT_314", "type": "required" }, { "id": "MGMT_321", "type": "required" }, { "id": "MGMT_322", "type": "required" }] },
+        "MGMT_433": { "name": "Cost Accounting", "prerequisites": [{ "id": "MGMT_284", "type": "required" }] },
+        "MGMT_434": { "name": "Federal Tax Accounting", "prerequisites": [{ "id": "MGMT_321", "type": "required" }, { "id": "MGMT_322", "type": "required" }] },
+        "MGMT_454": { "name": "Legal Environment of Business", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "MGMT_481": { "name": "Financial Statement Analysis", "prerequisites": [{ "id": "MGMT_281", "type": "required" }, { "id": "MGMT_284", "type": "required" }] },
+        "MGMT_499A": { "name": "Departmental Honors", "prerequisites": [] },
+        "MGMT_499B": { "name": "Departmental Honors", "prerequisites": [] },
+        "ECMG_212": { "name": "Statistics for Economics & Management", "prerequisites": [{ "id": "MATH_120", "type": "required" }] },
+        "ECMG_300": { "name": "Financial Economics", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECMG_303": { "name": "Principles of Finance & Investment", "prerequisites": [{ "id": "MGMT_281", "type": "required" }, { "id": "MATH_112", "type": "required" }, { "id": "ECMG_212", "type": "alternative_dotted" }, { "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "alternative_dotted" }] },
+        "ECMG_478": { "name": "International Financial Management", "prerequisites": [{ "id": "ECON_206", "type": "required" }, { "id": "ECMG_303", "type": "required" }, { "id": "ECON_306", "type": "required" }, { "id": "MGMT_314", "type": "required" }] },
+        "CAMG_330": { "name": "Social Media Marketing", "prerequisites": [{ "id": "MGMT_205", "type": "required" }] },
+        "CAMG_399": { "name": "Internship in Integrated Marketing Comm", "prerequisites": [] },
+        "CAMG_499A": { "name": "Departmental Honors", "prerequisites": [] },
+        "CAMG_499B": { "name": "Departmental Honors", "prerequisites": [] },
+        "ITMG_388": { "name": "Management Information Systems", "prerequisites": [{ "id": "MGMT_301", "type": "required" }] },
+        "ECON_205": { "name": "Principles of Macroeconomics", "prerequisites": [] },
+        "ECON_206": { "name": "Principles of Microeconomics", "prerequisites": [{ "id": "ECON_205", "type": "required" }] },
+        "ECON_299": { "name": "Special Topics", "prerequisites": [] },
+        "ECON_304": { "name": "International Political Economy", "prerequisites": [{ "id": "GLBS_200", "type": "required" }, { "id": "ECON_205", "type": "alternative_dotted" }, { "id": "PSCI_215", "type": "alternative_dotted" }] },
+        "ECON_305": { "name": "Macroeconomic Analysis", "prerequisites": [{ "id": "ECON_205", "type": "required" }] },
+        "ECON_306": { "name": "Microeconomic Analysis", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECON_307": { "name": "Economics and Finance of Sports", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECON_309": { "name": "Monetary Policy & Financial Markets", "prerequisites": [{ "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "required" }] },
+        "ECON_310": { "name": "Environmental Economics", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECON_315": { "name": "Economics of the Law", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECON_316": { "name": "Game Theory", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECON_317": { "name": "Economics of Development", "prerequisites": [{ "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "alternative_dotted" }] },
+        "ECON_320": { "name": "The Economics of Gender", "prerequisites": [{ "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "alternative_dotted" }] },
+        "ECON_324": { "name": "International Trade", "prerequisites": [{ "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "required" }, { "id": "ECON_306", "type": "required" }] },
+        "ECON_326": { "name": "Industrial Organization", "prerequisites": [{ "id": "ECON_206", "type": "required" }] },
+        "ECON_328": { "name": "Labor Economics", "prerequisites": [{ "id": "ECON_205", "type": "required" }, { "id": "ECON_206", "type": "required" }] },
+        "ECON_335": { "name": "Teaching Assistantship in Economics", "prerequisites": [] },
+        "ECON_375": { "name": "Independent Study", "prerequisites": [] },
+        "ECON_397": { "name": "Special Topics", "prerequisites": [] },
+        "ECON_399": { "name": "Internship in Economics", "prerequisites": [] },
+        "ECON_410": { "name": "Public Economics", "prerequisites": [{ "id": "ECON_306", "type": "required" }] },
+        "ECPS_414": { "name": "Environmental Policy", "prerequisites": [{ "id": "PSCI_203", "type": "required" }, { "id": "PSCI_210", "type": "alternative_dotted" }, { "id": "PSCI_215", "type": "alternative_dotted" }, { "id": "ECON_310", "type": "required" }] },
+        "ECON_452": { "name": "History of Economic Thought", "prerequisites": [{ "id": "ECON_305", "type": "required" }, { "id": "ECON_306", "type": "required" }] },
+        "PHIL_220": { "name": "Professional Ethics", "prerequisites": [] },
+        "PHIL_221": { "name": "Ethics", "prerequisites": [] },
+        "ENGL_307": { "name": "British Literature Only", "prerequisites": [] },
+        "ENGL_309": { "name": "British Literature After 1800", "prerequisites": [] },
+        "ENGL_270": { "name": "Genre Studies: Fiction/Poetry/Drama", "prerequisites": [] },
+        "ENGL_229": { "name": "History of Drama and Theatre I", "prerequisites": [] },
+        "ENGL_230": { "name": "History of Drama and Theatre II", "prerequisites": [] },
+        "ENGL_INCLUSIVE_VOICE": { "name": "Inclusive Voices Class", "prerequisites": [] },
+        "ENGL_219": { "name": "Creative Writing Workshop", "prerequisites": [] },
+        "ENGL_Elective_1": { "name": "English Elective 1", "prerequisites": [] },
+        "ENGL_Elective_2": { "name": "English Elective 2", "prerequisites": [] },
+        "ENGL_SIG_AUTHOR": { "name": "Writer of Significance Class", "prerequisites": [] },
+        "ENGL_311": { "name": "Approaches to Literature", "prerequisites": [] },
+        "ENGL_470": { "name": "Senior Seminar", "prerequisites": [{ "id": "ENGL_311", "type": "required" }] },
+        "CHEM_101": { "name": "General Chemistry I", "prerequisites": [] },
+        "CHEM_102": { "name": "General Chemistry II", "prerequisites": [{ "id": "CHEM_101", "type": "required" }] },
+        "CHEM_209": { "name": "Organic Chemistry I", "prerequisites": [{ "id": "CHEM_102", "type": "required" }] },
+        "CHEM_210": { "name": "Organic Chemistry II", "prerequisites": [{ "id": "CHEM_209", "type": "required" }] },
+        "CHEM_215": { "name": "Quantitative Analysis", "prerequisites": [{ "id": "CHEM_102", "type": "required" }] },
+        "CHEM_270": { "name": "Physical Science Literature", "prerequisites": [{ "id": "CHEM_209", "type": "required" }] },
+        "CHEM_301": { "name": "Biological Chemistry I", "prerequisites": [{ "id": "CHEM_210", "type": "required" }] },
+        "CHEM_324": { "name": "Instrumental Methods of Analysis", "prerequisites": [{ "id": "CHEM_215", "type": "required" }] },
+        "CHEM_405": { "name": "Inorganic Chemistry", "prerequisites": [{ "id": "CHEM_210", "type": "required" }] },
+        "CHEM_431": { "name": "Quantum Mechanics", "prerequisites": [{ "id": "CHEM_215", "type": "required" }, { "id": "MATH_202", "type": "required" }, { "id": "PHYS_102", "type": "alternative_dotted" }, { "id": "PHYS_204", "type": "alternative_dotted" }] },
+        "CHEM_432": { "name": "Thermodynamics & Statistical Mechanics", "prerequisites": [{ "id": "CHEM_215", "type": "required" }, { "id": "MATH_202", "type": "required" }, { "id": "PHYS_102", "type": "alternative_dotted" }, { "id": "PHYS_204", "type": "alternative_dotted" }] },
+        "CHEM_433": { "name": "Quantum Mechanics Laboratory", "prerequisites": [{ "id": "CHEM_431", "type": "required" }] },
+        "CHEM_434": { "name": "Thermodynamics & Statistical Mechanics Laboratory", "prerequisites": [{ "id": "CHEM_432", "type": "required" }] },
+        "CHEM_301": {"name": "Biological Chemistry I","prerequisites": [{ "id": "CHEM_210", "type": "required" }]},
+        "CHEM_402": {"name": "Biological Chemistry II","prerequisites": [{ "id": "CHEM_301", "type": "required" }]},
+        "CHEM_403": {"name": "Biological Chemistry Lab Techniques","prerequisites": [{ "id": "CHEM_402", "type": "corequisite" }]},
+        "PHYS_101": { "name": "General Physics I", "prerequisites": [] },
+        "PHYS_102": { "name": "General Physics II", "prerequisites": [{ "id": "PHYS_101", "type": "required" }] },
+        "PHYS_203": { "name": "Introductory Physics I", "prerequisites": [{ "id": "MATH_201", "type": "required" }] },
+        "PHYS_204": { "name": "Introductory Physics II", "prerequisites": [{ "id": "PHYS_203", "type": "required" }, { "id": "MATH_202", "type": "required" }] },
+        "BIOL_110-129": { "name": "Biological Inquiry", "prerequisites": [] },
+        "BIOL_201": { "name": "Evolution and Ecology", "prerequisites": [{ "id": "BIOL_110-129", "type": "required" }] },
+        "BIOL_202": { "name": "Physiology of Plants & Animals", "prerequisites": [{ "id": "BIOL_110-129", "type": "required" }] },
+        "BIOL_203": { "name": "Introduction to Cell Biology & Genetics", "prerequisites": [{ "id": "BIOL_110-129", "type": "required" }, { "id": "CHEM_101", "type": "required" }] },
+        "BIOL_LAB_ELEC_1": { "name": "Biology Elective w/ Lab (300+)", "prerequisites": [{ "id": "BIOL_201", "type": "required" }, { "id": "BIOL_202", "type": "required" }, { "id": "BIOL_203", "type": "required" }] },
+        "BIOL_LAB_ELEC_2": { "name": "Biology Elective w/ Lab (300+)", "prerequisites": [{ "id": "BIOL_201", "type": "required" }, { "id": "BIOL_202", "type": "required" }, { "id": "BIOL_203", "type": "required" }] },
+        "BIOL_LAB_ELEC_3": { "name": "Biology Elective w/ Lab (300+)", "prerequisites": [{ "id": "BIOL_201", "type": "required" }, { "id": "BIOL_202", "type": "required" }, { "id": "BIOL_203", "type": "required" }] },
+        "BIOL_ELEC_4": { "name": "Biology Elective (300+)", "prerequisites": [{ "id": "BIOL_201", "type": "required" }, { "id": "BIOL_202", "type": "required" }, { "id": "BIOL_203", "type": "required" }] },
+        "BIOL_ELEC_5": { "name": "Biology Elective (300+)", "prerequisites": [{ "id": "BIOL_201", "type": "required" }, { "id": "BIOL_202", "type": "required" }, { "id": "BIOL_203", "type": "required" }] },
+        "BIOL_CAPSTONE": { "name": "Biology Capstone (BIOL 375, 399, 470, or 499)", "prerequisites": [{ "id": "BIOL_201", "type": "required" }, { "id": "BIOL_202", "type": "required" }, { "id": "BIOL_203", "type": "required" }] },
+        "BIOL_331": {"name": "Microbiology","prerequisites": [{ "id": "BIOL_203", "type": "required" },{ "id": "CHEM_209", "type": "required" }]},
+        "BIOL_339": {"name": "Cell Biology","prerequisites": [{ "id": "BIOL_203", "type": "required" },{ "id": "CHEM_209", "type": "required" }]},
+        "FREN_101": { "name": "Elementary French I", "prerequisites": [] },
+        "FREN_102": { "name": "Elementary French II", "prerequisites": [{ "id": "FREN_101", "type": "required" }] },
+        "FREN_203": { "name": "Intermediate French I", "prerequisites": [{ "id": "FREN_102", "type": "required" }] },
+        "FREN_204": { "name": "Intermediate French II", "prerequisites": [{ "id": "FREN_203", "type": "required" }] },
+        "FREN_207": { "name": "Cultural Crossroads", "prerequisites": [{ "id": "FREN_203", "type": "required" }] },
+        "FREN_230": { "name": "French Phonetics and Diction", "prerequisites": [{ "id": "FREN_203", "type": "required" }] },
+        "FREN_313": { "name": "French Conversation and Composition", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_314": { "name": "Advanced French Grammar and Composition", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_317": { "name": "Civilization of France", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_318": { "name": "The French-Speaking World", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_320": { "name": "Francophone Women Writers", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_321": { "name": "From the Ivory Tower to the Street", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_322": { "name": "The Dynamic Duo: French Literature and Film", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_323": { "name": "Modern French Theatre", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "FREN_335": { "name": "Teaching Foreign Languages", "prerequisites": [] },
+        "FREN_397": { "name": "Special Topics in French", "prerequisites": [{ "id": "FREN_204", "type": "required" }] },
+        "MSCI_101": { "name": "Leadership and Personal Development", "prerequisites": [] },
+        "MSCI_102": { "name": "Introduction to Tactical Leadership", "prerequisites": [] },
+        "MSCI_201": { "name": "Innovative Team Leadership", "prerequisites": [] },
+        "MSCI_202": { "name": "Foundations of Tactical Leadership", "prerequisites": [] },
+        "MSCI_301": { "name": "Adaptive Team Leadership", "prerequisites": [{ "id": "MSCI_101", "type": "alternative_dotted" }, { "id": "MSCI_102", "type": "alternative_dotted" }, { "id": "MSCI_201", "type": "alternative_dotted" }, { "id": "MSCI_202", "type": "alternative_dotted" }] },
+        "MSCI_302": { "name": "Leadership in Changing Environments", "prerequisites": [{ "id": "MSCI_301", "type": "required" }] },
+        "MSCI_370": { "name": "Cadet Professional Development Practicum", "prerequisites": [{ "id": "MSCI_102", "type": "alternative_dotted" }] },
+        "MSCI_401": { "name": "Advanced Military Science III: Leadership and Management", "prerequisites": [{ "id": "MSCI_302", "type": "required" }] },
+        "MSCI_402": { "name": "Advanced Military Science IV: Officership", "prerequisites": [{ "id": "MSCI_401", "type": "required" }] }
     },
-    "MATH": {
-        "program": "Mathematics (B.A.)",
-        "fine_print_type": "MATH_SPECIAL",
-        "requirements": {
-            "Core Major Requirements": [
-                {
-                    "code": "CS 201",
-                    "name": "Computer Science I"
-                },
-                {
-                    "code": "MATH 201",
-                    "name": "Calculus I"
-                },
-                {
-                    "code": "MATH 202",
-                    "name": "Calculus II",
-                    "prerequisites": [
-                        { "id": "MATH 201", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 207",
-                    "name": "Discrete Math"
-                },
-                {
-                    "code": "MATH 213",
-                    "name": "Statistical Concepts and Methods"
-                },
-                {
-                    "code": "MATH 253",
-                    "name": "Multivariable Calculus",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 333",
-                    "name": "Introduction to Abstract Mathematics",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 339",
-                    "name": "Linear Algebra",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 470",
-                    "name": "Seminar: The History of Mathematics",
-                    "prerequisites": [
-                        { "id": "MATH 333", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 471",
-                    "name": "Research Project in the History of Mathematics",
-                    "prerequisites": [
-                        { "id": "MATH 470", "type": "required" }
-                    ]
-                }
-            ],
-            "Algebra or Analysis Core Option (Choose One)": [
-                {
-                    "code": "MATH 440",
-                    "name": "Introduction to Abstract Algebra",
-                    "prerequisites": [
-                        { "id": "MATH 333", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 453",
-                    "name": "Introduction to Real Analysis",
-                    "prerequisites": [
-                        { "id": "MATH 333", "type": "required" }
-                    ]
-                }
-            ],
-            "Major Electives": [
-                {
-                    "code": "MATH 304",
-                    "name": "Differential Equations",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 313",
-                    "name": "Statistical Modeling",
-                    "prerequisites": [
-                        { "id": "MATH 213", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 320",
-                    "name": "Modeling and Simulation",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" },
-                        { "id": "CS 201", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 336",
-                    "name": "Introduction to Modern Geometry",
-                    "prerequisites": [
-                        { "id": "MATH 202", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 351",
-                    "name": "Probability and Statistics",
-                    "prerequisites": [
-                        { "id": "MATH 253", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 407",
-                    "name": "Introduction to Graph Theory",
-                    "prerequisites": [
-                        { "id": "MATH 207", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 409",
-                    "name": "Elementary Number Theory",
-                    "prerequisites": [
-                        { "id": "MATH 333", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 456",
-                    "name": "Numerical Analysis",
-                    "prerequisites": [
-                        { "id": "MATH 253", "type": "required" },
-                        { "id": "MATH 339", "type": "required" }
-                    ]
-                }
-            ]
-        }
-    },"ENGL_CW": {
-        "program": "English (B.A.) - Creative Writing Concentration",
-        "requirements": {
-            "Historical Breadth Pre-1800 (Choose 1 or 2)": [
-                {
-                    "code": "ENGL 307",
-                    "name": "British Literature Only"
-                }
-            ],
-            "Historical Breadth Post-1800 (Choose 1 or 2)": [
-                {
-                    "code": "ENGL 309",
-                    "name": "British Literature After 1800"
-                }
-            ],
-            "Genre Studies (Choose Two Formats)": [
-                {
-                    "code": "ENGL 270",
-                    "name": "Genre Studies: Fiction/Poetry/Drama"
-                },
-                {
-                    "code": "ENGL 229",
-                    "name": "History of Drama and Theatre I"
-                },
-                {
-                    "code": "ENGL 230",
-                    "name": "History of Drama and Theatre II"
-                }
-            ],
-            "Inclusive Voices (Choose One)": [
-                {
-                    "code": "ENGL_INCLUSIVE_VOICE",
-                    "name": "Inclusive Voices Class"
-                }
-            ],
-            "Creative Writing Core & Options (ENGL 219 + 2 Electives)": [
-                {
-                    "code": "ENGL 219",
-                    "name": "Creative Writing Workshop"
-                },
-                {
-                    "code": "ENGL_Elective_1",
-                    "name": "English Elective 1"
-                },
-                {
-                    "code": "ENGL_Elective_2",
-                    "name": "English Elective 2"
-                }
-            ],
-            "Writers of Significance (Choose One)": [
-                {
-                    "code": "ENGL_SIG_AUTHOR",
-                    "name": "Writer of Significance Class"
-                }
-            ],
-            "Theory & Capstone": [
-                {
-                    "code": "ENGL 311",
-                    "name": "Approaches to Literature"
-                },
-                {
-                    "code": "ENGL 470",
-                    "name": "Senior Seminar",
-                    "prerequisites": [ { "id": "ENGL 311", "type": "required" } ]
-                }
-            ]
-        }
-    },"CHEM": {
-        "program": "Chemistry (B.A.)",
-        "requirements": {
-            "Core Courses": [
-                {
-                    "code": "CHEM 101",
-                    "name": "General Chemistry I",
-                    "prerequisites": []
-                },
-                {
-                    "code": "CHEM 102",
-                    "name": "General Chemistry II",
-                    "prerequisites": [
-                        { "id": "CHEM 101", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 209",
-                    "name": "Organic Chemistry I",
-                    "prerequisites": [
-                        { "id": "CHEM 102", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 210",
-                    "name": "Organic Chemistry II",
-                    "prerequisites": [
-                        { "id": "CHEM 209", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 215",
-                    "name": "Quantitative Analysis",
-                    "prerequisites": [
-                        { "id": "CHEM 102", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 270",
-                    "name": "Physical Science Literature",
-                    "prerequisites": [
-                        { "id": "CHEM 209", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 301",
-                    "name": "Biological Chemistry I",
-                    "prerequisites": [
-                        { "id": "CHEM 210", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 324",
-                    "name": "Instrumental Methods of Analysis",
-                    "prerequisites": [
-                        { "id": "CHEM 215", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 405",
-                    "name": "Inorganic Chemistry",
-                    "prerequisites": [
-                        { "id": "CHEM 210", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 431",
-                    "name": "Quantum Mechanics",
-                    "prerequisites": [
-                        { "id": "CHEM 215", "type": "required" },
-                        { "id": "MATH 202", "type": "required" },
-                        { "id": "PHYS 102", "type": "alternative_dotted" },
-                        { "id": "PHYS 204", "type": "alternative_dotted" }
-                    ]
-                },
-                {
-                    "code": "CHEM 432",
-                    "name": "Thermodynamics & Statistical Mechanics",
-                    "prerequisites": [
-                        { "id": "CHEM 215", "type": "required" },
-                        { "id": "MATH 202", "type": "required" },
-                        { "id": "PHYS 102", "type": "alternative_dotted" },
-                        { "id": "PHYS 204", "type": "alternative_dotted" }
-                    ]
-                },
-                {
-                    "code": "CHEM 433",
-                    "name": "Quantum Mechanics Laboratory",
-                    "prerequisites": [
-                        { "id": "CHEM 431", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 434",
-                    "name": "Thermodynamics & Statistical Mechanics Laboratory",
-                    "prerequisites": [
-                        { "id": "CHEM 432", "type": "required" }
-                    ]
-                }
-            ],
-            "Mathematics Requirements": [
-                {
-                    "code": "MATH 201",
-                    "name": "Calculus I",
-                    "prerequisites": []
-                },
-                {
-                    "code": "MATH 202",
-                    "name": "Calculus II",
-                    "prerequisites": [
-                        { "id": "MATH 201", "type": "required" }
-                    ]
-                }
-            ],
-            "Physics Requirements": [
-                {
-                    "code": "PHYS 101",
-                    "name": "General Physics I",
-                    "prerequisites": []
-                },
-                {
-                    "code": "PHYS 102",
-                    "name": "General Physics II",
-                    "prerequisites": [
-                        { "id": "PHYS 101", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "PHYS 203",
-                    "name": "Introductory Physics I",
-                    "prerequisites": [
-                        { "id": "MATH 201", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "PHYS 204",
-                    "name": "Introductory Physics II",
-                    "prerequisites": [
-                        { "id": "PHYS 203", "type": "required" },
-                        { "id": "MATH 202", "type": "required" }
-                    ]
-                }
-            ]
-        }
-    },"BIOL": {
-        "program": "Biology (B.A.)",
-        "requirements": {
-            "Introductory & Core Biology": [
-                {
-                    "code": "BIOL 110-129",
-                    "name": "Biological Inquiry"
-                },
-                {
-                    "code": "BIOL 201",
-                    "name": "Evolution and Ecology",
-                    "prerequisites": [
-                        { "id": "BIOL 110-129", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "BIOL 202",
-                    "name": "Physiology of Plants & Animals",
-                    "prerequisites": [
-                        { "id": "BIOL 110-129", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "BIOL 203",
-                    "name": "Introduction to Cell Biology & Genetics",
-                    "prerequisites": [
-                        { "id": "BIOL 110-129", "type": "required" },
-                        { "id": "CHEM 101", "type": "required" }
-                    ]
-                }
-            ],
-            "Chemistry & Math Foundation": [
-                {
-                    "code": "CHEM 101",
-                    "name": "General Chemistry I"
-                },
-                {
-                    "code": "CHEM 102",
-                    "name": "General Chemistry II",
-                    "prerequisites": [
-                        { "id": "CHEM 101", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "CHEM 209",
-                    "name": "Organic Chemistry I",
-                    "prerequisites": [
-                        { "id": "CHEM 102", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "MATH 213",
-                    "name": "Statistical Concepts and Methods"
-                }
-            ],
-            "Biology Electives (300+)": [
-                {
-                    "code": "BIOL_LAB_ELEC_1",
-                    "name": "Biology Elective w/ Lab (300+)",
-                    "prerequisites": [
-                        { "id": "BIOL 201", "type": "required" },
-                        { "id": "BIOL 202", "type": "required" },
-                        { "id": "BIOL 203", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "BIOL_LAB_ELEC_2",
-                    "name": "Biology Elective w/ Lab (300+)",
-                    "prerequisites": [
-                        { "id": "BIOL 201", "type": "required" },
-                        { "id": "BIOL 202", "type": "required" },
-                        { "id": "BIOL 203", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "BIOL_LAB_ELEC_3",
-                    "name": "Biology Elective w/ Lab (300+)",
-                    "prerequisites": [
-                        { "id": "BIOL 201", "type": "required" },
-                        { "id": "BIOL 202", "type": "required" },
-                        { "id": "BIOL 203", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "BIOL_ELEC_4",
-                    "name": "Biology Elective (300+)",
-                    "prerequisites": [
-                        { "id": "BIOL 201", "type": "required" },
-                        { "id": "BIOL 202", "type": "required" },
-                        { "id": "BIOL 203", "type": "required" }
-                    ]
-                },
-                {
-                    "code": "BIOL_ELEC_5",
-                    "name": "Biology Elective (300+)",
-                    "prerequisites": [
-                        { "id": "BIOL 201", "type": "required" },
-                        { "id": "BIOL 202", "type": "required" },
-                        { "id": "BIOL 203", "type": "required" }
-                    ]
-                }
-            ],
-            "Capstone": [
-                {
-                    "code": "BIOL_CAPSTONE",
-                    "name": "Biology Capstone (BIOL 375, 399, 470, or 499)",
-                    "prerequisites": [
-                        { "id": "BIOL 201", "type": "required" },
-                        { "id": "BIOL 202", "type": "required" },
-                        { "id": "BIOL 203", "type": "required" }
-                    ]
-                }
-            ]
-        }
+    "programs": {
+        "CS": {
+            "program": "Computer Science (B.S.)",
+            "requirements": {
+                "Core Courses": ["CS_201", "CS_202", "CSIT_203", "CS_219", "CS_226", "CS_319", "CS_324", "CS_329", "CS_453", "CS_464", "CS_471", "CS_474", "CS_475"],
+                "Math Foundation": ["MATH_201", "MATH_202", "MATH_207"],
+                "Electives and Labs": ["CS_ELECTIVE_1", "CS_ELECTIVE_2", "CS_ELECTIVE_3", "LAB_SCIENCE_1", "LAB_SCIENCE_2"]
+            }
+        },
+        "MATH": {
+            "program": "Mathematics (B.A.)",
+            "requirements": {
+                "Core Major Requirements": ["CS_201", "MATH_201", "MATH_202", "MATH_207", "MATH_213", "MATH_253", "MATH_333", "MATH_339", "MATH_470", "MATH_471"],
+                "Algebra or Analysis Core Option (Choose One)": ["MATH_440", "MATH_453"],
+                "Major Electives": ["MATH_304", "MATH_313", "MATH_320", "MATH_336", "MATH_351", "MATH_407", "MATH_409", "MATH_456"]
+            }
+        },
+        "ACC": {
+            "program": "Accounting (B.A.)",
+            "requirements": {
+                "Business Administration Core": ["MGMT_205", "MGMT_306", "MGMT_312", "MGMT_314", "ECMG_303", "ITMG_388", "MGMT_454", "MGMT_411"],
+                "Accounting Requirements": ["MGMT_281", "MGMT_284", "MGMT_321", "MGMT_322", "MGMT_331", "MGMT_432", "MGMT_433", "MGMT_434"],
+                "Support Core": ["ECON_205", "ECON_206", "MATH_112", "PHIL_220"],
+                "Strongly Recommended Options": ["ECON_309", "MATH_201"]
+            }
+        },
+        "ENGL_CW": {
+            "program": "English (B.A.) - Creative Writing Concentration",
+            "requirements": {
+                "Historical Breadth Pre-1800 (Choose 1 or 2)": ["ENGL_307"],
+                "Historical Breadth Post-1800 (Choose 1 or 2)": ["ENGL_309"],
+                "Genre Studies (Choose Two Formats)": ["ENGL_270", "ENGL_229", "ENGL_230"],
+                "Inclusive Voices (Choose One)": ["ENGL_INCLUSIVE_VOICE"],
+                "Creative Writing Core & Options (ENGL 219 + 2 Electives)": ["ENGL_219", "ENGL_Elective_1", "ENGL_Elective_2"],
+                "Writers of Significance (Choose One)": ["ENGL_SIG_AUTHOR"],
+                "Theory & Capstone": ["ENGL_311", "ENGL_470"]
+            }
+        },
+        "CHEM": {
+            "program": "Chemistry (B.A.)",
+            "requirements": {
+                "Core Courses": ["CHEM_101", "CHEM_102", "CHEM_209", "CHEM_210", "CHEM_215", "CHEM_270", "CHEM_301", "CHEM_324", "CHEM_405", "CHEM_431", "CHEM_432", "CHEM_433", "CHEM_434"],
+                "Mathematics Requirements": ["MATH_201", "MATH_202"],
+                "Physics Requirements": ["PHYS_101", "PHYS_102", "PHYS_203", "PHYS_204"]
+            }
+        },
+        "BIOL": {
+            "program": "Biology (B.A.)",
+            "requirements": {
+                "Introductory & Core Biology": ["BIOL_110-129", "BIOL_201", "BIOL_202", "BIOL_203"],
+                "Chemistry & Math Foundation": ["CHEM_101", "CHEM_102", "CHEM_209", "MATH_213"],
+                "Biology Electives (300+)": ["BIOL_LAB_ELEC_1", "BIOL_LAB_ELEC_2", "BIOL_LAB_ELEC_3", "BIOL_ELEC_4", "BIOL_ELEC_5"],
+                "Capstone": ["BIOL_CAPSTONE"]
+            }
+        },
+        "MGMT": {
+            "program": "Business Administration (B.A.)",
+            "requirements": {
+                "Business Administration Core": 
+                [   "MGMT_205",
+                    "MGMT_281",
+                    "MGMT_284",
+                    "MGMT_301",
+                    "ECMG_303",
+                    "MGMT_306",
+                    "MGMT_312",
+                    "MGMT_314",
+                    "ITMG_388",
+                    "MGMT_454"],
+                "Economics & Statistics Foundation": 
+                [   "ECON_205",
+                    "ECON_206",
+                    "ECON_306",
+                    "MATH_112_OR_ECMG_212"],
+                "Concentration Electives (Choose 3 Courses from Focus Area)": 
+                [   "MGMT_CONC_ELEC_1",
+                    "MGMT_CONC_ELEC_2",
+                    "MGMT_CONC_ELEC_3"],
+                "Capstone": 
+                ["MGMT_411"]
+            }
+        },
+        "ACC": {
+    "program": "Accounting (B.A.)",
+    "requirements": {
+        "Business & Economics Foundation": [
+            "ECON_205",
+            "ECON_206",
+            "MGMT_205",
+            "MGMT_281",
+            "MGMT_284",
+            "MATH_112_OR_ECMG_212"
+        ],
+        "Accounting Core": [
+            "MGMT_314",
+            "MGMT_321",
+            "MGMT_322",
+            "MGMT_331",
+            "MGMT_432",
+            "MGMT_433"
+        ],
+        "Upper-Level Business Requirements": [
+            "MGMT_301",
+            "ECMG_303",
+            "MGMT_454"
+        ],
+        "Accounting Elective (Choose One)": [
+            "ACC_ELEC_1"
+        ],
+        "Capstone": [
+            "MGMT_411"
+        ]
+    }
+},"BCHM": {
+    "program": "Biochemistry (B.A.)",
+    "requirements": {
+        "Chemistry Core Requirements": [
+            "CHEM_101",
+            "CHEM_102",
+            "CHEM_209",
+            "CHEM_210",
+            "CHEM_215",
+            "CHEM_270",
+            "CHEM_301",
+            "CHEM_402",
+            "CHEM_403",
+            "CHEM_431",
+            "CHEM_433"
+        ],
+        "Biology Core Requirements": [
+            "BIOL_110-129",
+            "BIOL_203",
+            "BIOL_331",
+            "BIOL_339"
+        ],
+        "Mathematics & Physics Foundation": [
+            "MATH_201",
+            "MATH_202",
+            "PHYS_101",
+            "PHYS_102",
+            "PHYS_203",
+            "PHYS_204"
+        ]
+    }
+}
     }
 }
