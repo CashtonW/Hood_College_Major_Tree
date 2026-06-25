@@ -160,14 +160,15 @@
             if (feedbackText) feedbackText.textContent = '';
         }
 
-        function handleClearAllSelections() {
+        async function handleClearAllSelections(skipRenderFlag = false) {
+            const shouldSkip = skipRenderFlag === true;
             completedNodesTracker.clear();
             updateProgressMetrics();
             clearSearchEngine();
 
             // Re-render the graph entirely to restore any nodes that were layout-shifted off screen
-            if (window.triggerReRender && currentSelectionMode !== 'HOME') {
-                window.triggerReRender();
+            if (!shouldSkip && window.triggerReRender && currentSelectionMode !== 'HOME') {
+                await window.triggerReRender();
             } else {
                 // Fallback state clear
                 const nodeElements = document.querySelectorAll('.node');
@@ -228,45 +229,47 @@
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
                     const page = await pdf.getPage(pageNum);
                     const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' \n ');
+                    // Join with spaces to prevent breaking IDs that pdf.js reads on split lines
+                    const pageText = textContent.items.map(item => item.str).join(' '); 
                     fullExtractedText += pageText + '\n';
                 }
 
-                const courseRegex = /([A-Z]{2,4})\s+(\d{3}(?:-\d{3})?[A-Z]?)/g;
+                // Robust parser: Handles CS 201, CS201, CS-201, BIOL 110-129, etc.
+                const courseRegex = /([a-zA-Z]{2,6})[\s-]*(\d{3}(?:-\d{3})?[a-zA-Z]?)/g;
                 let matchedRecords = [];
                 let match;
 
                 while ((match = courseRegex.exec(fullExtractedText)) !== null) {
-                    const cleanCode = `${match[1]}_${match[2]}`;
+                    const dept = match[1].toUpperCase();
+                    const num = match[2].toUpperCase();
+                    const cleanCode = `${dept}_${num}`;
                     if (!matchedRecords.includes(cleanCode)) {
                         matchedRecords.push(cleanCode);
                     }
                 }
 
-                handleClearAllSelections();
+                // Clean the board silently to avoid Mermaid Engine Race Conditions
+                await handleClearAllSelections(true); 
 
-                let needsRender = false;
+                // Batch process data states
                 matchedRecords.forEach(cleanId => {
                     if (activeGraphNodeIds.includes(cleanId) && !completedNodesTracker.has(cleanId)) {
-                        const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(cleanId));
-                        const hasParents = currentDependencyMap[cleanId] && currentDependencyMap[cleanId].length > 0;
-                        const isIsolated = !isParent && !hasParents;
-
-                        if (isIsolated) {
-                            needsRender = true;
-                            if (typeof window.mermaidNodeClick === 'function') window.mermaidNodeClick(cleanId, true); 
-                        } else {
-                            if (typeof window.mermaidNodeClick === 'function') window.mermaidNodeClick(cleanId);
+                        if (typeof window.mermaidNodeClick === 'function') {
+                            window.mermaidNodeClick(cleanId, true); 
                         }
                     }
                 });
 
-                if (needsRender && window.triggerReRender) {
-                    window.triggerReRender();
+                // Deploy a single re-render wipe to commit massive structural changes
+                if (window.triggerReRender) {
+                    await window.triggerReRender();
                 }
 
             } catch (error) {
                 console.error("Transcript Parsing Error:", error);
+            } finally {
+                // Flush the input so the same file can trigger 'onchange' again
+                event.target.value = ''; 
             }
         }
 
