@@ -281,6 +281,28 @@
                         <h2 style="color: #003366; font-size: 28px; margin-bottom: 10px;">Welcome to the Academic Major Dependency System</h2>
                         <p style="font-size: 16px;">Please select an undergraduate program from the menu above to map out structural prerequisites.</p>
                     </div>
+                    
+                    <!-- Dynamically Injected Complaint Panel -->
+                    <div class="complaint-panel" style="margin-top: 40px; text-align: left;">
+                        <h3>Submit a Complaint or Feedback</h3>
+                        <p>Notice a broken prerequisite layout? Let us know.</p>
+                        
+                        <form action="https://formspree.io/f/xdaqgwzq" method="POST">
+                            <div class="form-group">
+                                <label for="userEmail">Your Email (Optional):</label>
+                                <input type="email" id="userEmail" name="email" placeholder="name@example.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="complaintText">Complaint / Feedback Details:</label>
+                                <textarea id="complaintText" name="message" rows="4" placeholder="Describe the issue..." required></textarea>
+                            </div>
+                            
+                            <input type="text" name="_honey" style="display:none">
+                            
+                            <button type="submit" class="submit-complaint-btn">Submit Form</button>
+                        </form>
+                    </div>
                 `;
                 setupActiveCourseIds('HOME');
                 return;
