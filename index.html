@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <link rel="stylesheet" href="style.css">
     <title>Hood College | Academic Major Dependency Trees</title>
     <style>
-        body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f6; overflow: hidden; }
+        html, body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f6; overflow: hidden; height: 100%; }
         .node { cursor: pointer; }
+        #graph-zoom-wrapper { transform-origin: top left; display: inline-block; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
@@ -30,8 +32,23 @@
                 <select id="categoryFilter">
                     <option value="HOME">Home (No Graph)</option>
                 </select>
+                <!-- DOUBLE MAJOR: "+" button. Hidden on the HOME screen (nothing to add a
+                     second major to yet); revealed once a primary major is chosen. Clicking
+                     it reveals the second-major dropdown below. -->
+                <button id="addMajorBtn" class="add-major-btn" title="Add a second major (double major planner)" style="display: none;">+</button>
             </div>
-            
+
+            <!-- DOUBLE MAJOR: second-major picker. Stays hidden until the user presses
+                 the "+" button above. Choosing a program here merges its requirements
+                 into the same graph, and an "x" removes it again. -->
+            <div class="control-group double-major-group" id="secondMajorWrapper" style="display: none;">
+                <label for="secondMajorFilter">Add Major:</label>
+                <select id="secondMajorFilter">
+                    <option value="">-- Choose second major --</option>
+                </select>
+                <button id="removeSecondMajorBtn" class="remove-major-btn" title="Remove second major">&times;</button>
+            </div>
+
             <div class="control-group search-group" id="searchWrapper" style="display: none;">
                 <label for="courseSearchInput">Find Course:</label>
                 <div class="search-input-container">
@@ -46,6 +63,11 @@
                 <input type="file" id="transcriptFileInput" accept="application/pdf" style="display: none;">
             </div>
 
+            <!-- COURSE RECOMMENDER: opens a panel suggesting 3-5 courses to take next,
+                 based on prerequisites met, the current time of year, and how rarely a
+                 course is offered (see computeRecommendations() in the script below). -->
+            <button id="recommendBtn" class="recommend-btn" style="display: none;">Recommend Courses</button>
+
             <button id="clearAllBtn" class="clear-selection-btn" style="display: none;">Clear All</button>
         </div>
         
@@ -57,36 +79,128 @@
         </div>
     </div>
 
+    <!-- COURSE RECOMMENDER: modal overlay populated dynamically by
+         showRecommendationPanel() in the script. Hidden until the user
+         clicks "Recommend Courses". -->
+    <div class="recommend-overlay" id="recommendOverlay" style="display: none;">
+        <div class="recommend-modal">
+            <div class="recommend-modal-header">
+                <h3>Recommended Courses</h3>
+                <button id="closeRecommendBtn" class="recommend-close-btn" aria-label="Close">&times;</button>
+            </div>
+            <p class="recommend-modal-subtitle" id="recommendSubtitle"></p>
+            <div id="recommendResultsList" class="recommend-results-list"></div>
+        </div>
+    </div>
+
     <div class="app-layout">
-        <div class="viewport">
-            <div id="graph-container"></div>
+        <div class="viewport" id="viewport">
+            <div id="graph-zoom-wrapper">
+                <div id="graph-container"></div>
+            </div>
+        </div>
+        <div class="zoom-controls" id="zoomControls" style="display: none;">
+            <button id="zoomInBtn" title="Zoom in" aria-label="Zoom in">+</button>
+            <span id="zoomLevelLabel">100%</span>
+            <button id="zoomOutBtn" title="Zoom out" aria-label="Zoom out">&minus;</button>
+            <button id="zoomResetBtn" title="Reset zoom">Reset</button>
         </div>
     </div>
 
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        
-        mermaid.initialize({ 
-            startOnLoad: false, 
+
+        mermaid.initialize({
+            startOnLoad: false,
             theme: 'neutral',
             securityLevel: 'loose',
-            flowchart: { rankSpacing: 140, nodeSpacing: 65 }
+            themeVariables: { fontSize: '16px' },
+            flowchart: {
+                useMaxWidth: false,   // Render graphs at their natural size instead of
+                                      // squeezing large trees to fit the viewport width
+                htmlLabels: true,
+                rankSpacing: 140,
+                nodeSpacing: 70
+            }
         });
 
-        let cachedData = null;
-        let activeGraphNodeIds = [];
-        let currentSelectionMode = "HOME";
-        let completedNodesTracker = new Set();
-        let currentDependencyMap = {}; 
-        window.triggerReRender = null; // Global hook for re-rendering layouts
+        // =================================================================
+        // GLOBAL APPLICATION STATE
+        // =================================================================
+        let cachedData = null;                 // Full parsed tree_structure.json
+        let activeGraphNodeIds = [];            // Every course id relevant to the CURRENT view (used for the progress bar denominator)
+        let currentSelectionMode = "HOME";       // Primary major key (or "HOME")
+        let secondMajorKey = null;               // DOUBLE MAJOR: second major key, or null if not double-majoring
+        let completedNodesTracker = new Set();  // Course ids the student has marked "passed"
+        let currentDependencyMap = {};           // courseId -> [prerequisite course ids]
+        let currentCourseMeta = {};              // courseId -> {name, availability, ...} for every node currently on screen (used by the recommender)
+        window.triggerReRender = null;           // Global hook for re-rendering layouts
 
+        // DOUBLE MAJOR: tracks which selected major(s) each currently-displayed course
+        // belongs to, so shared/overlapping requirements can be visually flagged.
+        // Values are Sets containing 'primary' and/or 'secondary'.
+        let courseMajorMembership = {};
+
+        // -----------------------------------------------------------------
+        // MERMAID-SAFE ID SANITIZATION
+        // -----------------------------------------------------------------
+        // Root cause of the "Error drawing the dynamic chart" bug on the English
+        // major page: several course keys in tree_structure.json contained spaces,
+        // hyphens, "#", or "." (e.g. "200-level English course", "ENGL_270-289").
+        // Mermaid flowchart node ids must be simple alphanumeric/underscore tokens;
+        // anything else breaks the parser and mermaid.run() throws, which is what
+        // the catch block below was silently turning into that generic error message.
+        //
+        // The source data has been cleaned up directly in tree_structure.json, but
+        // this sanitizer is kept as a defensive second layer so that any future typo
+        // or copy-paste error in the data can never crash the whole graph again -
+        // it will just render with a cleaned-up id instead of throwing.
+        let idSafeMap = {};   // raw course key -> sanitized mermaid-safe id
+        let idRawMap = {};    // sanitized mermaid-safe id -> raw course key
+
+        function sanitizeMermaidId(rawId) {
+            if (idSafeMap[rawId]) return idSafeMap[rawId];
+
+            // Replace anything that isn't a letter/digit/underscore with "_"
+            let safe = String(rawId).replace(/[^A-Za-z0-9_]/g, '_');
+            // Mermaid ids can't start with a digit
+            if (/^[0-9]/.test(safe)) safe = 'c_' + safe;
+
+            // Guard against two different raw ids sanitizing to the same string
+            let candidate = safe;
+            let suffix = 2;
+            while (idRawMap[candidate] && idRawMap[candidate] !== rawId) {
+                candidate = `${safe}_${suffix}`;
+                suffix += 1;
+            }
+
+            idSafeMap[rawId] = candidate;
+            idRawMap[candidate] = rawId;
+            return candidate;
+        }
+
+        // Builds the human-readable label for a node, e.g. "ENGL_270_289" -> "ENGL 270-289".
+        // Only the FIRST underscore (the department/number separator) becomes a space;
+        // any remaining underscores (used in multi-part course codes) become hyphens so
+        // labels still read naturally instead of showing raw underscores.
+        function formatCourseLabel(courseKey) {
+            const idx = courseKey.indexOf('_');
+            if (idx === -1) return courseKey;
+            const dept = courseKey.slice(0, idx);
+            const rest = courseKey.slice(idx + 1).replace(/_/g, '-');
+            return `${dept} ${rest}`;
+        }
+
+        // =================================================================
+        // APP INITIALIZATION
+        // =================================================================
         async function initializeApp() {
             try {
                 const response = await fetch('tree_structure.json');
                 cachedData = await response.json();
-                
+
                 const selectElement = document.getElementById('categoryFilter');
-                
+
                 Object.keys(cachedData.programs).forEach(key => {
                     if (cachedData.programs[key] && cachedData.programs[key].program) {
                         const option = document.createElement('option');
@@ -101,23 +215,54 @@
             }
         }
 
+        // Populates the "Add Major" second dropdown with every program except the one
+        // already showing as the primary selection (a student can't double-major in the
+        // same program twice).
+        function populateSecondMajorOptions(excludeKey) {
+            const secondSelect = document.getElementById('secondMajorFilter');
+            secondSelect.innerHTML = '<option value="">-- Choose second major --</option>';
+
+            Object.keys(cachedData.programs).forEach(key => {
+                if (key === excludeKey) return;
+                const prog = cachedData.programs[key];
+                if (!prog || !prog.program) return;
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = prog.program;
+                secondSelect.appendChild(option);
+            });
+        }
+
         function setupActiveCourseIds(selection) {
             activeGraphNodeIds = [];
             completedNodesTracker.clear();
             currentSelectionMode = selection;
+            secondMajorKey = null; // Changing the primary major always resets any double-major pairing
+            clearSearchEngine();
 
             const progressWrapper = document.getElementById('topProgressWrapper');
             const searchWrapper = document.getElementById('searchWrapper');
             const transcriptWrapper = document.getElementById('transcriptWrapper');
             const clearBtn = document.getElementById('clearAllBtn');
-            clearSearchEngine();
-            
+            const zoomControls = document.getElementById('zoomControls');
+            const addMajorBtn = document.getElementById('addMajorBtn');
+            const secondMajorWrapper = document.getElementById('secondMajorWrapper');
+            const recommendBtn = document.getElementById('recommendBtn');
+
+            // Second-major picker always collapses back down when the primary changes
+            secondMajorWrapper.style.display = 'none';
+            document.getElementById('secondMajorFilter').value = '';
+
             if (selection === 'HOME' || !cachedData || !cachedData.programs[selection] || !cachedData.programs[selection].requirements) {
                 progressWrapper.style.display = 'none';
                 searchWrapper.style.display = 'none';
                 transcriptWrapper.style.display = 'none';
                 clearBtn.style.display = 'none';
+                zoomControls.style.display = 'none';
+                addMajorBtn.style.display = 'none';
+                recommendBtn.style.display = 'none';
                 updateProgressMetrics();
+                requestAnimationFrame(syncAppLayoutOffset);
                 return;
             }
 
@@ -125,19 +270,33 @@
             searchWrapper.style.display = 'flex';
             transcriptWrapper.style.display = 'flex';
             clearBtn.style.display = 'inline-block';
-            const segments = cachedData.programs[selection].requirements;
+            zoomControls.style.display = 'flex';
+            addMajorBtn.style.display = 'inline-flex';       // DOUBLE MAJOR: reveal the "+" once a real major is picked
+            recommendBtn.style.display = 'inline-block';     // RECOMMENDER: reveal once a real major is picked
+            resetGraphZoom();
+            requestAnimationFrame(syncAppLayoutOffset);
 
-            Object.keys(segments).forEach(groupTitle => {
-                const courseKeysList = segments[groupTitle] || [];
-                courseKeysList.forEach(courseKey => {
-                    if (!courseKey) return;
-                    if (!activeGraphNodeIds.includes(courseKey)) {
-                        activeGraphNodeIds.push(courseKey);
-                    }
+            collectActiveIdsForCurrentSelections();
+            updateProgressMetrics();
+        }
+
+        // Gathers every course id needed for the progress bar denominator across
+        // whichever major(s) are currently active (one, or two if double-majoring).
+        function collectActiveIdsForCurrentSelections() {
+            activeGraphNodeIds = [];
+            [currentSelectionMode, secondMajorKey].forEach(progKey => {
+                if (!progKey || !cachedData.programs[progKey]) return;
+                const segments = cachedData.programs[progKey].requirements;
+                Object.keys(segments).forEach(groupTitle => {
+                    const courseKeysList = segments[groupTitle] || [];
+                    courseKeysList.forEach(courseKey => {
+                        if (!courseKey) return;
+                        if (!activeGraphNodeIds.includes(courseKey)) {
+                            activeGraphNodeIds.push(courseKey);
+                        }
+                    });
                 });
             });
-
-            updateProgressMetrics();
         }
 
         function updateProgressMetrics() {
@@ -186,7 +345,7 @@
 
         function handleCourseSearchExecution() {
             const feedbackText = document.getElementById('searchFeedbackMessage');
-            feedbackText.textContent = ''; 
+            feedbackText.textContent = '';
 
             if (currentSelectionMode === 'HOME') return;
 
@@ -198,12 +357,13 @@
             }
 
             const targetIdString = userInput.toUpperCase().replace(/\s/g, '_').replace('-', '_');
+            const safeTarget = sanitizeMermaidId(targetIdString);
             const nodeElements = Array.from(document.querySelectorAll('.node'));
-            const destinationDomNode = nodeElements.find(n => n.id.includes(`flowchart-${targetIdString}-`) || n.id === `flowchart-${targetIdString}`);
+            const destinationDomNode = nodeElements.find(n => n.id.includes(`flowchart-${safeTarget}-`) || n.id === `flowchart-${safeTarget}`);
 
             // If node was isolated, clicked, and successfully removed from rendering
             if (!destinationDomNode && completedNodesTracker.has(targetIdString)) {
-                feedbackText.style.color = '#38a169'; 
+                feedbackText.style.color = '#38a169';
                 feedbackText.textContent = 'Course is already completed and hidden.';
                 return;
             }
@@ -230,7 +390,7 @@
                     const page = await pdf.getPage(pageNum);
                     const textContent = await page.getTextContent();
                     // Join with spaces to prevent breaking IDs that pdf.js reads on split lines
-                    const pageText = textContent.items.map(item => item.str).join(' '); 
+                    const pageText = textContent.items.map(item => item.str).join(' ');
                     fullExtractedText += pageText + '\n';
                 }
 
@@ -249,13 +409,13 @@
                 }
 
                 // Clean the board silently to avoid Mermaid Engine Race Conditions
-                await handleClearAllSelections(true); 
+                await handleClearAllSelections(true);
 
                 // Batch process data states
                 matchedRecords.forEach(cleanId => {
                     if (activeGraphNodeIds.includes(cleanId) && !completedNodesTracker.has(cleanId)) {
                         if (typeof window.mermaidNodeClick === 'function') {
-                            window.mermaidNodeClick(cleanId, true); 
+                            window.mermaidNodeClick(cleanId, true);
                         }
                     }
                 });
@@ -269,10 +429,13 @@
                 console.error("Transcript Parsing Error:", error);
             } finally {
                 // Flush the input so the same file can trigger 'onchange' again
-                event.target.value = ''; 
+                event.target.value = '';
             }
         }
 
+        // =================================================================
+        // MAIN VIEW / GRAPH BUILDING
+        // =================================================================
         async function updateView(selection) {
             const container = document.getElementById('graph-container');
             if (selection === 'HOME') {
@@ -281,25 +444,25 @@
                         <h2 style="color: #003366; font-size: 28px; margin-bottom: 10px;">Welcome to the Academic Major Dependency System</h2>
                         <p style="font-size: 16px;">Please select an undergraduate program from the menu above to map out structural prerequisites.</p>
                     </div>
-                    
+
                     <!-- Dynamically Injected Complaint Panel -->
                     <div class="complaint-panel" style="margin-top: 40px; text-align: left;">
                         <h3>Submit a Complaint or Feedback</h3>
                         <p>Notice a broken prerequisite layout? Let us know.</p>
-                        
+
                         <form action="https://formspree.io/f/xdaqgwzq" method="POST">
                             <div class="form-group">
                                 <label for="userEmail">Your Email (Optional):</label>
                                 <input type="email" id="userEmail" name="email" placeholder="name@example.com">
                             </div>
-                            
+
                             <div class="form-group">
                                 <label for="complaintText">Complaint / Feedback Details:</label>
                                 <textarea id="complaintText" name="message" rows="4" placeholder="Describe the issue..." required></textarea>
                             </div>
-                            
+
                             <input type="text" name="_honey" style="display:none">
-                            
+
                             <button type="submit" class="submit-complaint-btn">Submit Form</button>
                         </form>
                     </div>
@@ -313,17 +476,54 @@
             }
 
             setupActiveCourseIds(selection);
+            populateSecondMajorOptions(selection); // DOUBLE MAJOR: refresh options to exclude the newly-chosen primary
+            await renderCombinedGraph();
+        }
 
-            currentDependencyMap = {}; 
+        // DOUBLE MAJOR: called when the user picks a program from the "Add Major" dropdown.
+        // Keeps the primary major and the student's existing completed-course progress intact,
+        // and simply expands the graph to include the second program's requirements too.
+        async function addSecondMajor(progKey) {
+            if (!progKey || progKey === currentSelectionMode) return;
+            secondMajorKey = progKey;
+            collectActiveIdsForCurrentSelections();
+            document.getElementById('removeSecondMajorBtn').style.display = 'inline-flex';
+            await renderCombinedGraph();
+        }
+
+        // DOUBLE MAJOR: removes the second major and collapses back to a single-major view.
+        async function removeSecondMajor() {
+            secondMajorKey = null;
+            document.getElementById('secondMajorFilter').value = '';
+            collectActiveIdsForCurrentSelections();
+            await renderCombinedGraph();
+        }
+
+        // Builds (or rebuilds) the dependency map / node titles / membership sets for
+        // whichever major(s) are currently selected, then renders the Mermaid graph.
+        // This single function is shared by single-major and double-major flows so the
+        // rendering logic never has to be duplicated or drift out of sync.
+        async function renderCombinedGraph() {
+            const container = document.getElementById('graph-container');
+
+            currentDependencyMap = {};
+            currentCourseMeta = {};
+            courseMajorMembership = {};
             let currentViewNodeTitles = {};
-            let targetCourseKeys = [];
-            const segments = cachedData.programs[selection]?.requirements || {}; 
-            
-            Object.keys(segments).forEach(key => {
-                if (Array.isArray(segments[key])) {
-                    targetCourseKeys = targetCourseKeys.concat(segments[key]);
-                }
-            });
+
+            // Build the course-key list for each active major separately so we can tag
+            // membership (primary / secondary / shared-by-both) for the double-major coloring.
+            const primaryKeys = flattenRequirementKeys(currentSelectionMode);
+            const secondaryKeys = secondMajorKey ? flattenRequirementKeys(secondMajorKey) : [];
+
+            const targetCourseKeys = [];
+            const registerMembership = (courseKey, tag) => {
+                if (!courseMajorMembership[courseKey]) courseMajorMembership[courseKey] = new Set();
+                courseMajorMembership[courseKey].add(tag);
+            };
+
+            primaryKeys.forEach(k => { registerMembership(k, 'primary'); if (!targetCourseKeys.includes(k)) targetCourseKeys.push(k); });
+            secondaryKeys.forEach(k => { registerMembership(k, 'secondary'); if (!targetCourseKeys.includes(k)) targetCourseKeys.push(k); });
 
             if (targetCourseKeys.length === 0) {
                 container.innerHTML = '<p style="text-align: center; margin-top: 20px; color: #666666;">No courses found for this program.</p>';
@@ -333,8 +533,8 @@
             targetCourseKeys.forEach(courseKey => {
                 const courseMeta = cachedData.courses[courseKey];
                 if (courseMeta) {
-                    const visualLabel = courseKey.replace('_', ' ');
-                    currentViewNodeTitles[courseKey] = `${visualLabel}<br/>${courseMeta.name || 'Elective'}`;
+                    currentCourseMeta[courseKey] = courseMeta;
+                    currentViewNodeTitles[courseKey] = `${formatCourseLabel(courseKey)}<br/>${courseMeta.name || 'Elective'}`;
                 }
             });
 
@@ -343,17 +543,17 @@
                 if (!courseMeta) return;
 
                 if (!currentDependencyMap[courseKey]) currentDependencyMap[courseKey] = [];
-                
+
                 if (courseMeta.prerequisites && Array.isArray(courseMeta.prerequisites)) {
                     courseMeta.prerequisites.forEach(pre => {
                         if (!pre || !pre.id) return;
                         currentDependencyMap[courseKey].push(pre.id);
-                        
+
                         if (!currentViewNodeTitles[pre.id]) {
-                            const fallbackLabel = pre.id.replace('_', ' ');
                             const globalMeta = cachedData.courses[pre.id];
                             const fallbackName = globalMeta ? globalMeta.name : 'Prerequisite Course';
-                            currentViewNodeTitles[pre.id] = `${fallbackLabel}<br/>${fallbackName}`;
+                            currentViewNodeTitles[pre.id] = `${formatCourseLabel(pre.id)}<br/>${fallbackName}`;
+                            if (globalMeta) currentCourseMeta[pre.id] = globalMeta;
                         }
                     });
                 }
@@ -362,13 +562,13 @@
             // RE-RENDER ENGINE: Wipes and redraws the layout based strictly on data state
             window.triggerReRender = async function() {
                 let graphDefinition = 'graph TD;\n';
-                
+
                 // 1. Calculate which nodes survive the culling process
                 const nodesToDraw = Object.keys(currentViewNodeTitles).filter(id => {
                     const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(id));
                     const hasParents = currentDependencyMap[id] && currentDependencyMap[id].length > 0;
                     const isIsolated = !isParent && !hasParents;
-                    
+
                     // If it is isolated AND completed, we physically exclude it from the render string
                     if (isIsolated && completedNodesTracker.has(id)) {
                         return false;
@@ -381,16 +581,24 @@
                     return;
                 }
 
-                // 2. Build the syntax string
+                // 2. Build the syntax string. Every node/edge id passed to Mermaid goes through
+                //    sanitizeMermaidId() first - this is the fix for the crash that used to happen
+                //    on courses whose raw key contained spaces/hyphens/etc.
                 nodesToDraw.forEach(id => {
-                    graphDefinition += `  ${id}["${currentViewNodeTitles[id]}"];\n`;
+                    const safeId = sanitizeMermaidId(id);
+                    // DOUBLE MAJOR: flag courses that satisfy both selected majors directly in the
+                    // label, so the overlap is obvious no matter what CSS state the node is in.
+                    const membership = courseMajorMembership[id];
+                    const isShared = membership && membership.has('primary') && membership.has('secondary');
+                    const label = isShared ? `${currentViewNodeTitles[id]}<br/>&#11088; Counts for Both Majors` : currentViewNodeTitles[id];
+                    graphDefinition += `  ${safeId}["${label}"];\n`;
                 });
 
                 Object.keys(currentDependencyMap).forEach(id => {
                     if (nodesToDraw.includes(id)) {
                         currentDependencyMap[id].forEach(parentId => {
                             if (nodesToDraw.includes(parentId)) {
-                                graphDefinition += `  ${parentId} --> ${id};\n`;
+                                graphDefinition += `  ${sanitizeMermaidId(parentId)} --> ${sanitizeMermaidId(id)};\n`;
                             }
                         });
                     }
@@ -398,7 +606,7 @@
 
                 graphDefinition += `\n`;
                 nodesToDraw.forEach(id => {
-                    graphDefinition += `  click ${id} call mermaidNodeClick("${id}");\n`;
+                    graphDefinition += `  click ${sanitizeMermaidId(id)} call mermaidNodeClick("${id}");\n`;
                 });
 
                 // 3. Mount to DOM
@@ -407,6 +615,7 @@
                     const element = document.getElementById('graph-engine');
                     await mermaid.run({ nodes: [element] });
                     applyGraphState(); // Restore styling to surviving nodes
+                    applyDualMajorHighlighting(); // DOUBLE MAJOR: outline courses shared by both majors
                 } catch (renderError) {
                     console.error("Mermaid Render Error:", renderError);
                     container.innerHTML = '<p style="color: #003366; font-weight: bold; padding: 20px;">Error drawing the dynamic chart. Verify structural constraints.</p>';
@@ -414,12 +623,15 @@
             };
 
             // STATE RESTORATION ENGINE: Restores visual progress after a layout wipe
-            function applyGraphState() {
+            function findDomNodeBySafeId(safeId) {
                 const nodeElements = Array.from(document.querySelectorAll('.node'));
-                
+                return nodeElements.find(n => n.id === `flowchart-${safeId}` || n.id.includes(`flowchart-${safeId}-`));
+            }
+
+            function applyGraphState() {
                 // Restore node highlights
                 completedNodesTracker.forEach(id => {
-                    const nodeDom = nodeElements.find(n => n.id === `flowchart-${id}` || n.id.includes(`flowchart-${id}-`));
+                    const nodeDom = findDomNodeBySafeId(sanitizeMermaidId(id));
                     if (nodeDom) nodeDom.classList.add('selected-node');
                 });
 
@@ -429,9 +641,11 @@
                     if (completedNodesTracker.has(childId)) {
                         currentDependencyMap[childId].forEach(parentId => {
                             if (completedNodesTracker.has(parentId)) {
+                                const safeParent = sanitizeMermaidId(parentId);
+                                const safeChild = sanitizeMermaidId(childId);
                                 edges.forEach(edge => {
                                     const classes = edge.className.baseVal || edge.className;
-                                    if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${childId}`)) {
+                                    if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeChild}`)) {
                                         const pathElement = edge.querySelector('path');
                                         if (pathElement) pathElement.classList.add('selected-edge');
                                     }
@@ -441,9 +655,9 @@
                     }
                 });
 
-                // Restore "Ready to Take" orange highlights
+                // Restore "Ready to Take" highlights
                 Object.keys(currentDependencyMap).forEach(childId => {
-                    const childDomNode = nodeElements.find(n => n.id === `flowchart-${childId}` || n.id.includes(`flowchart-${childId}-`));
+                    const childDomNode = findDomNodeBySafeId(sanitizeMermaidId(childId));
                     if (!childDomNode) return;
 
                     const parentIds = currentDependencyMap[childId];
@@ -458,13 +672,28 @@
                 updateProgressMetrics();
             }
 
+            // DOUBLE MAJOR: adds a distinguishing outline class to any node that belongs to
+            // BOTH the primary and secondary major's requirements, so a student can instantly
+            // see which classes give them double credit.
+            function applyDualMajorHighlighting() {
+                if (!secondMajorKey) return;
+                Object.keys(courseMajorMembership).forEach(courseKey => {
+                    const membership = courseMajorMembership[courseKey];
+                    if (membership.has('primary') && membership.has('secondary')) {
+                        const nodeDom = findDomNodeBySafeId(sanitizeMermaidId(courseKey));
+                        if (nodeDom) nodeDom.classList.add('dual-major-shared');
+                    }
+                });
+            }
+
             // Central Click Manager
             window.mermaidNodeClick = function(nodeId, skipRender = false) {
                 const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(nodeId));
                 const hasParents = currentDependencyMap[nodeId] && currentDependencyMap[nodeId].length > 0;
                 const isIsolated = !isParent && !hasParents;
-                
+
                 const willBeActive = !completedNodesTracker.has(nodeId);
+                const safeNodeId = sanitizeMermaidId(nodeId);
 
                 // If isolated node clicked: mark complete and trigger structural resize
                 if (isIsolated && willBeActive) {
@@ -478,10 +707,10 @@
 
                 // Standard Node Fast-DOM handling
                 const nodeElements = Array.from(document.querySelectorAll('.node'));
-                const targetNode = nodeElements.find(n => n.id.includes(nodeId));
+                const targetNode = nodeElements.find(n => n.id.includes(safeNodeId));
                 if (!targetNode) return;
 
-                function findDomNode(id) { return nodeElements.find(n => n.id.includes(id)); }
+                function findDomNode(id) { return nodeElements.find(n => n.id.includes(sanitizeMermaidId(id))); }
 
                 if (willBeActive) {
                     function highlightAncestors(id) {
@@ -492,10 +721,12 @@
                         if (currentDependencyMap[id]) {
                             currentDependencyMap[id].forEach(parentId => {
                                 highlightAncestors(parentId);
+                                const safeParent = sanitizeMermaidId(parentId);
+                                const safeId = sanitizeMermaidId(id);
                                 const edges = document.querySelectorAll('.edgePath');
                                 edges.forEach(edge => {
                                     const classes = edge.className.baseVal || edge.className;
-                                    if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${id}`)) {
+                                    if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeId}`)) {
                                         const pathElement = edge.querySelector('path');
                                         if (pathElement) pathElement.classList.add('selected-edge');
                                     }
@@ -507,13 +738,14 @@
                 } else {
                     targetNode.classList.remove('selected-node');
                     completedNodesTracker.delete(nodeId);
-                    
+
                     if (currentDependencyMap[nodeId]) {
                         currentDependencyMap[nodeId].forEach(parentId => {
+                            const safeParent = sanitizeMermaidId(parentId);
                             const edges = document.querySelectorAll('.edgePath');
                             edges.forEach(edge => {
                                 const classes = edge.className.baseVal || edge.className;
-                                if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${nodeId}`)) {
+                                if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeNodeId}`)) {
                                     const pathElement = edge.querySelector('path');
                                     if (pathElement) pathElement.classList.remove('selected-edge');
                                 }
@@ -529,10 +761,12 @@
                                     childNode.classList.remove('selected-node');
                                     completedNodesTracker.delete(childId);
 
+                                    const safeParent2 = sanitizeMermaidId(parentId);
+                                    const safeChild2 = sanitizeMermaidId(childId);
                                     const edges = document.querySelectorAll('.edgePath');
                                     edges.forEach(edge => {
                                         const classes = edge.className.baseVal || edge.className;
-                                        if (classes.includes(`ls-${parentId}`) && classes.includes(`le-${childId}`)) {
+                                        if (classes.includes(`ls-${safeParent2}`) && classes.includes(`le-${safeChild2}`)) {
                                             const pathElement = edge.querySelector('path');
                                             if (pathElement) pathElement.classList.remove('selected-edge');
                                         }
@@ -570,6 +804,232 @@
             await window.triggerReRender();
         }
 
+        // Flattens a program's "requirements" object (which mixes plain strings and
+        // OR-choice arrays) into one flat list of course keys.
+        function flattenRequirementKeys(progKey) {
+            if (!progKey || !cachedData.programs[progKey]) return [];
+            const segments = cachedData.programs[progKey].requirements || {};
+            let keys = [];
+            Object.keys(segments).forEach(groupTitle => {
+                (segments[groupTitle] || []).forEach(item => {
+                    if (Array.isArray(item)) {
+                        keys = keys.concat(item);
+                    } else if (item) {
+                        keys.push(item);
+                    }
+                });
+            });
+            return keys;
+        }
+
+        // =================================================================
+        // FEATURE: COURSE RECOMMENDER
+        // =================================================================
+        // Suggests 3-5 courses to take next, weighing three factors the user asked for:
+        //   1. Prerequisites met - only courses the student is actually eligible for.
+        //   2. Time of year - a course that runs in the upcoming or current semester
+        //      scores higher (registering during summer counts toward the coming Fall).
+        //   3. Scarcity - a course offered only in odd/even years gets a priority boost
+        //      when it happens to be offered *this* cycle, since skipping it means
+        //      waiting a full extra year for another chance.
+
+        // Determines the current semester bucket and calendar-year parity "right now".
+        function getCurrentTermInfo() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // JS months are 0-indexed
+            const year = now.getFullYear();
+
+            let semester;
+            if (month >= 1 && month <= 5) semester = 'Spring';
+            else if (month >= 6 && month <= 8) semester = 'Summer';
+            else semester = 'Fall';
+
+            const parity = (year % 2 === 0) ? 'Even' : 'Odd';
+            return { semester, year, parity };
+        }
+
+        // Parses one entry of a course's "availability" array, e.g. "Fall Semester(Even)",
+        // "Spring Semester", or "Even Years", into a structured {semester, parity} shape.
+        function parseAvailabilityEntry(entry) {
+            const semesterMatch = entry.match(/(Fall|Spring|Summer)\s*Semester(?:\((Even|Odd)\))?/i);
+            if (semesterMatch) {
+                return { semester: semesterMatch[1], parity: semesterMatch[2] || null };
+            }
+            const yearOnlyMatch = entry.match(/(Even|Odd)\s*Years?/i);
+            if (yearOnlyMatch) {
+                return { semester: null, parity: yearOnlyMatch[1] };
+            }
+            return { semester: null, parity: null };
+        }
+
+        // A course's listed semester is "relevant" right now if it matches the current
+        // semester - with one deliberate exception: while planning during Summer, Fall
+        // courses are also relevant, since that's exactly when students register for Fall.
+        function isSemesterRelevant(courseSemester, currentSemester) {
+            if (currentSemester === 'Summer') {
+                return courseSemester === 'Fall' || courseSemester === 'Summer';
+            }
+            return courseSemester === currentSemester;
+        }
+
+        // Scores a single course for the recommendation engine.
+        // Returns { score, availableNow, isRare } where availableNow means "this course
+        // can actually be registered for in the upcoming registration cycle."
+        function scoreCourseForRecommendation(meta, term) {
+            let score = 0;
+            let availableNow = false;
+            let isRare = false;
+            const availability = meta.availability || [];
+
+            if (availability.length === 0) {
+                // No availability data on file - treat as flexible/likely offered,
+                // but don't let it outrank courses we have real scheduling data for.
+                score += 4;
+                availableNow = true;
+            }
+
+            availability.forEach(entry => {
+                const parsed = parseAvailabilityEntry(entry);
+                const semesterOk = parsed.semester ? isSemesterRelevant(parsed.semester, term.semester) : true;
+                const parityOk = parsed.parity ? parsed.parity === term.parity : true;
+
+                if (parsed.parity) isRare = true; // only offered every other year = a scarce course
+
+                if (semesterOk && parityOk) {
+                    availableNow = true;
+                    score += 10; // it actually runs in the upcoming registration window
+                    if (parsed.parity) {
+                        // SCARCITY PRIORITY: this is a biennial course AND it happens to be
+                        // offered this cycle - strongly prioritize it, since missing it means
+                        // waiting a full extra year for the next opportunity.
+                        score += 15;
+                    }
+                }
+            });
+
+            return { score, availableNow, isRare };
+        }
+
+        // Builds the ranked recommendation list from the currently displayed graph.
+        function computeRecommendations() {
+            const term = getCurrentTermInfo();
+            const candidates = [];
+
+            Object.keys(currentCourseMeta).forEach(courseKey => {
+                // Skip anything already marked as passed
+                if (completedNodesTracker.has(courseKey)) return;
+                // Only recommend courses that are part of an actual major requirement,
+                // not a raw prerequisite-only placeholder pulled in from elsewhere
+                if (!activeGraphNodeIds.includes(courseKey)) return;
+
+                // Prerequisites met check
+                const prereqIds = currentDependencyMap[courseKey] || [];
+                const prereqsMet = prereqIds.every(pid => completedNodesTracker.has(pid));
+                if (!prereqsMet) return;
+
+                const meta = currentCourseMeta[courseKey];
+                const { score, availableNow, isRare } = scoreCourseForRecommendation(meta, term);
+                if (!availableNow) return; // don't recommend a course that isn't actually offered this cycle
+
+                candidates.push({ courseKey, meta, score, isRare, term });
+            });
+
+            candidates.sort((a, b) => b.score - a.score);
+            return { list: candidates.slice(0, 5), term };
+        }
+
+        function showRecommendationPanel() {
+            const { list, term } = computeRecommendations();
+            const overlay = document.getElementById('recommendOverlay');
+            const subtitle = document.getElementById('recommendSubtitle');
+            const resultsList = document.getElementById('recommendResultsList');
+
+            subtitle.textContent = `Based on prerequisites met, and ${term.semester} ${term.year} course availability.`;
+
+            if (list.length === 0) {
+                resultsList.innerHTML = '<p style="color:#666; padding: 10px 0;">No eligible courses were found for the current term. Try marking more completed prerequisites, or check back next semester.</p>';
+            } else {
+                resultsList.innerHTML = list.map(item => {
+                    const rareBadge = item.isRare ? '<span class="recommend-badge recommend-badge-rare">Limited Availability</span>' : '';
+                    return `
+                        <div class="recommend-card">
+                            <div class="recommend-card-title">${formatCourseLabel(item.courseKey)}</div>
+                            <div class="recommend-card-name">${item.meta.name || 'Elective'}</div>
+                            ${rareBadge}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            overlay.style.display = 'flex';
+        }
+
+        function hideRecommendationPanel() {
+            document.getElementById('recommendOverlay').style.display = 'none';
+        }
+
+        // =================================================================
+        // LAYOUT ENGINE: Measures the real height of the fixed header + controls panel
+        // (which can wrap onto multiple lines on narrow/mobile screens, or when many
+        // controls such as search + transcript upload + clear-all are visible at once)
+        // and pushes the graph viewport down by exactly that amount, instead of relying
+        // on a hardcoded pixel offset that breaks whenever the panel wraps.
+        // =================================================================
+        function syncAppLayoutOffset() {
+            const header = document.querySelector('.hood-header');
+            const controls = document.querySelector('.controls-panel');
+            const appLayout = document.querySelector('.app-layout');
+            if (!header || !controls || !appLayout) return;
+
+            const headerHeight = header.offsetHeight;
+            const controlsBottom = controls.getBoundingClientRect().bottom;
+            const totalOffset = Math.max(headerHeight, controlsBottom) + 12;
+
+            appLayout.style.paddingTop = `${totalOffset}px`;
+            controls.style.top = `${headerHeight + 10}px`;
+        }
+
+        window.addEventListener('load', syncAppLayoutOffset);
+        window.addEventListener('resize', syncAppLayoutOffset);
+        if (window.ResizeObserver) {
+            const layoutObserver = new ResizeObserver(syncAppLayoutOffset);
+            layoutObserver.observe(document.querySelector('.controls-panel'));
+            layoutObserver.observe(document.querySelector('.hood-header'));
+        }
+
+        // =================================================================
+        // ZOOM ENGINE: Lets users scale large / cluttered dependency trees up or down,
+        // independent of the browser's own page zoom, so text stays legible whether
+        // a major has 5 courses or 25+.
+        // =================================================================
+        let currentGraphZoom = 1;
+        const ZOOM_MIN = 0.4, ZOOM_MAX = 2.5, ZOOM_STEP = 0.15;
+
+        function applyGraphZoom() {
+            const wrapper = document.getElementById('graph-zoom-wrapper');
+            if (wrapper) wrapper.style.transform = `scale(${currentGraphZoom})`;
+            const label = document.getElementById('zoomLevelLabel');
+            if (label) label.textContent = `${Math.round(currentGraphZoom * 100)}%`;
+        }
+
+        function resetGraphZoom() {
+            currentGraphZoom = 1;
+            applyGraphZoom();
+        }
+
+        document.getElementById('zoomInBtn').addEventListener('click', () => {
+            currentGraphZoom = Math.min(ZOOM_MAX, +(currentGraphZoom + ZOOM_STEP).toFixed(2));
+            applyGraphZoom();
+        });
+        document.getElementById('zoomOutBtn').addEventListener('click', () => {
+            currentGraphZoom = Math.max(ZOOM_MIN, +(currentGraphZoom - ZOOM_STEP).toFixed(2));
+            applyGraphZoom();
+        });
+        document.getElementById('zoomResetBtn').addEventListener('click', resetGraphZoom);
+
+        // =================================================================
+        // EVENT WIRING
+        // =================================================================
         const filterSelect = document.getElementById('categoryFilter');
         filterSelect.addEventListener('change', (e) => {
             updateView(e.target.value);
@@ -582,12 +1042,33 @@
 
         document.getElementById('clearAllBtn').addEventListener('click', handleClearAllSelections);
         document.getElementById('transcriptFileInput').addEventListener('change', handleTranscriptUpload);
-        
+
+        // DOUBLE MAJOR wiring: "+" reveals the second-major picker; choosing an option
+        // adds it; "x" removes it again.
+        document.getElementById('addMajorBtn').addEventListener('click', () => {
+            const wrapper = document.getElementById('secondMajorWrapper');
+            wrapper.style.display = wrapper.style.display === 'none' ? 'flex' : 'none';
+        });
+        document.getElementById('secondMajorFilter').addEventListener('change', (e) => {
+            if (e.target.value) {
+                addSecondMajor(e.target.value);
+            }
+        });
+        document.getElementById('removeSecondMajorBtn').addEventListener('click', removeSecondMajor);
+
+        // RECOMMENDER wiring
+        document.getElementById('recommendBtn').addEventListener('click', showRecommendationPanel);
+        document.getElementById('closeRecommendBtn').addEventListener('click', hideRecommendationPanel);
+        document.getElementById('recommendOverlay').addEventListener('click', (e) => {
+            // Clicking the dimmed backdrop (not the modal itself) closes the panel
+            if (e.target.id === 'recommendOverlay') hideRecommendationPanel();
+        });
+
         (async () => {
             await initializeApp();
             updateView('HOME');
         })();
-        
+
     </script>
 </body>
 </html>

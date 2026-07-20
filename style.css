@@ -46,10 +46,12 @@
 
 .app-layout {
     display: flex;
+    position: relative;
     width: 100vw;
     height: 100vh;
-    padding-top: 145px; 
+    padding-top: 145px; /* fallback; refined at runtime by JS to match real header/controls height */
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .viewport { 
@@ -57,7 +59,8 @@
     height: 100%;
     overflow: auto; 
     background: #f8fafc; 
-    padding: 40px;
+    padding: 24px;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* 2. NODE APPEARANCE (Default/Unclicked/Locked State) */
@@ -71,7 +74,7 @@
 .node:not(.selected-node):not(.prereqs-met) text { 
     fill: #666666 !important;           
     font-weight: 500 !important; 
-    font-size: 14px !important; 
+    font-size: 16px !important; 
     pointer-events: none; 
 }
 
@@ -85,6 +88,7 @@
 .node.prereqs-met:not(.selected-node) text {
     fill: #003366 !important;           
     font-weight: 600 !important;
+    font-size: 16px !important;
 }
 
 /* 3. SELECTED/HIGHLIGHTED STATE (Passed) */
@@ -96,7 +100,8 @@
 
 .node.selected-node text { 
     font-weight: bold !important; 
-    fill: #27ae60 !important;           
+    fill: #27ae60 !important;
+    font-size: 16px !important;
 }
 
 /* 4. CONNECTION EDGES */
@@ -113,7 +118,7 @@
 /* Dropdown Filter & Progress Bar Control Panel Styling */
 .controls-panel {
     position: fixed;
-    top: 80px; 
+    top: 80px; /* fallback; refined at runtime by JS to sit just under the header */
     left: 20px;
     right: 20px;
     z-index: 1000;
@@ -124,19 +129,22 @@
     border: 1px solid #e2e8f0;
     box-shadow: 0 4px 20px rgba(0,0,0,0.05);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 30px;
+    gap: 16px 30px;
 }
 
 .left-controls {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 25px;
+    gap: 16px 25px;
 }
 
 .control-group {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 12px;
 }
@@ -374,4 +382,350 @@
 
 .submit-complaint-btn:hover {
     background-color: #002244;
+}
+
+/* 6b. DOUBLE MAJOR CONTROLS ("+" button, second-major dropdown, remove button) */
+.add-major-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 6px;
+    background: #003366;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.add-major-btn:hover {
+    background: #002244;
+}
+
+.double-major-group select {
+    border-color: #27ae60;
+}
+
+.remove-major-btn {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #666666;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.remove-major-btn:hover {
+    background: #f1f5f9;
+    border-color: #e53e3e;
+    color: #e53e3e;
+}
+
+/* Courses that satisfy BOTH majors in a double-major view get a distinct gold,
+   dashed outline layered on top of whatever state (locked/ready/passed) the
+   node is already in, so overlapping credit is obvious at a glance. */
+.node.dual-major-shared rect {
+    stroke-dasharray: 6 3 !important;
+    stroke: #d4a017 !important;
+    stroke-width: 3px !important;
+}
+
+/* 6c. COURSE RECOMMENDER: floating action button + modal */
+.recommend-btn {
+    background-color: #27ae60;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: background-color 0.15s ease;
+}
+
+.recommend-btn:hover {
+    background-color: #1e8449;
+}
+
+.recommend-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.recommend-modal {
+    background: #ffffff;
+    border-radius: 10px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+
+.recommend-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.recommend-modal-header h3 {
+    color: #003366;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.recommend-close-btn {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    line-height: 1;
+    color: #666666;
+    cursor: pointer;
+}
+
+.recommend-close-btn:hover {
+    color: #e53e3e;
+}
+
+.recommend-modal-subtitle {
+    color: #64748b;
+    font-size: 13px;
+    margin: 6px 0 18px 0;
+}
+
+.recommend-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.recommend-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #f8fafc;
+}
+
+.recommend-card-title {
+    font-weight: 800;
+    color: #003366;
+    font-size: 15px;
+}
+
+.recommend-card-name {
+    color: #334155;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.recommend-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.recommend-badge-rare {
+    background: #fdf3d8;
+    color: #b8860b;
+}
+
+/* 7. ZOOM CONTROLS FOR LARGE / CLUTTERED DEPENDENCY TREES */
+.zoom-controls {
+    position: absolute;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    padding: 6px;
+}
+
+.zoom-controls button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 6px;
+    background: #003366;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.zoom-controls button:hover {
+    background: #002244;
+}
+
+#zoomResetBtn {
+    width: auto;
+    padding: 0 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#zoomLevelLabel {
+    min-width: 46px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #003366;
+}
+
+/* 8. RESPONSIVE / MOBILE LAYOUT
+   Everything above stays intact for desktop; these overrides kick in on
+   narrower viewports so header text, controls, and graph nodes stay legible
+   instead of shrinking down with the rest of the page. */
+@media (max-width: 900px) {
+    .hood-header {
+        padding: 12px 16px;
+        height: auto;
+        min-height: 56px;
+    }
+
+    .hood-logo-text {
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+
+    .header-divider {
+        margin: 0 12px;
+        height: 20px;
+    }
+
+    .hood-header h1 {
+        font-size: 14px;
+        white-space: normal;
+    }
+
+    .controls-panel {
+        left: 10px;
+        right: 10px;
+        padding: 12px 16px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .left-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .control-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .controls-panel select {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .search-input-container {
+        width: 100%;
+    }
+
+    .search-input-container input {
+        width: 100%;
+        flex: 1;
+    }
+
+    .clear-selection-btn,
+    .transcript-upload-label,
+    .recommend-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .double-major-group {
+        width: 100%;
+    }
+
+    .double-major-group select {
+        flex: 1;
+    }
+
+    .recommend-modal {
+        max-width: 100%;
+    }
+
+    .top-progress-container {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .viewport {
+        padding: 16px;
+    }
+
+    #graph-container {
+        padding: 16px;
+    }
+
+    .zoom-controls {
+        right: 12px;
+        bottom: 12px;
+    }
+
+    /* Bump node text up further on small screens so labels stay readable
+       even when a major's tree has many closely-packed courses. */
+    .node:not(.selected-node):not(.prereqs-met) text,
+    .node.prereqs-met:not(.selected-node) text,
+    .node.selected-node text {
+        font-size: 17px !important;
+    }
+
+    .complaint-panel {
+        max-width: 100%;
+        margin: 20px 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hood-logo-text {
+        font-size: 14px;
+    }
+
+    .hood-header h1 {
+        font-size: 12px;
+    }
+
+    .zoom-controls button {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
 }

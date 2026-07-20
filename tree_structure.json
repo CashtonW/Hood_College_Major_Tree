@@ -1,325 +1,394 @@
 {
     "courses": {
         "AFEN_265": {
-            "name": "Unlisted course referenced as prerequisite (AFEN 265)",
+            "name": "African American Voices Before 20th Century",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester(Even)"
+            ],
             "stub": true
         },
         "AFEN_266": {
-            "name": "Unlisted course referenced as prerequisite (AFEN 266)",
+            "name": "The Harlem Renaissance and Beyond: 20th Century African American Literature",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester(Odd)"
+            ],
             "stub": true
         },
         "ARTS_102": {
-            "name": "Unlisted course referenced as prerequisite (ARTS 102)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ARTS_222": {
-            "name": "Unlisted course referenced as prerequisite (ARTS 222)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ART_275": {
-            "name": "Unlisted course referenced as prerequisite (ART 275)",
-            "prerequisites": [],
+            "name": "The Art of Film: History & Technique",
+            "prerequisites": [
+                {
+                    "id": "ENGL_110_139",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "BIOL_24": {
             "name": "Unlisted course referenced as prerequisite (BIOL 24)",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester"
+            ],
             "stub": true
         },
         "CMA_200": {
-            "name": "Unlisted course referenced as prerequisite (CMA 200)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "CMA_206": {
-            "name": "Unlisted course referenced as prerequisite (CMA 206)",
+            "name": "Business Communication",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "CMA_226": {
-            "name": "Unlisted course referenced as prerequisite (CMA 226)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_100": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 100)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_101": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 101)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "ENGL_110-139": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 110-139)",
+            "name": "Composition: Writing Skills",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_219": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 219)",
-            "prerequisites": [],
+            "name": "Creative Writing",
+            "prerequisites": [
+                {
+                    "id": "ENGL_100",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "ENGL_229": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 229)",
+            "name": "History of Drama Theatre I",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester"
+            ],
             "stub": true
         },
         "ENGL_230": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 230)",
+            "name": "History of Drama and Theatre II",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester(Even)"
+            ],
             "stub": true
         },
         "ENGL_237": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 237)",
+            "name": "Young Adult Literature",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Even Years"
+            ],
             "stub": true
         },
         "ENGL_242": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 242)",
+            "name": "Global Medieval Literature",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_247": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 247)",
+            "name": "Global Shakespeares",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_249": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 249)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "ENGL_270-289": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 270-289)",
+            "name": "Contemporary Global Fiction",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_278": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 278)",
+            "name": "Genre Studies: Women's Poetry",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester(Even)"
+            ],
             "stub": true
         },
         "ENGL_280": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 280)",
+            "name": "Genre Studies: 20th Century Ethnic Narratives",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_286": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 286)",
+            "name": "Genre Studies: African American Poetry",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Spring Semester(Even)"
+            ],
             "stub": true
         },
         "ENGL_287": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 287)",
+            "name": "Thematic Studies: Disability Literature",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Fall Semester"
+            ],
             "stub": true
         },
         "ENGL_289": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 289)",
+            "name": "Genre Studies: Queer Poetry",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "ENGL_311": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 311)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Approaches to Literature",
+            "prerequisites": [
+                {
+                    "id": "ENGL_100",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "ENGL_313": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 313)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Shakespeare",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "ENGL_318": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 318)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Chaucer",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Fall Semester(Even)"
+            ],
             "stub": true
         },
         "ENGL_319": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 319)",
-            "prerequisites": [],
+            "name": "Creative Nonfiction",
+            "prerequisites": [
+                {
+                    "id": "ENGL_219",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "ENGL_326": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 326)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Intermediate Fiction Writing",
+            "prerequisites": [
+                {
+                    "id": "ENGL_219",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Fall Semester(Odd)"
+            ],
             "stub": true
         },
         "ENGL_327": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 327)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Intermediate Poetry Writing",
+            "prerequisites": [
+                {
+                    "id": "ENGL_219",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Fall Semester(Odd)"
+            ],
             "stub": true
         },
         "ENGL_340": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 340)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "ENGL_340-359": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 340-359)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Writers of Significance: Elizabeth Bishop & Sylvia Plath",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Fall Semester(Odd)"
+            ],
             "stub": true
         },
         "ENGL_344": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 344)",
-            "prerequisites": [],
+            "name": "Writers of Significance: Woolf and Forster",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "ENGL_346": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 346)",
-            "prerequisites": [],
+            "name": "Writers of Significance: Erdrich, Silko & Alexie",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "ENGL_347": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 347)",
-            "prerequisites": [],
+            "name": "Writers of Significance: Whitman & Dickinson",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "ENGL_420": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 420)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Advanced Fiction Writing",
+            "prerequisites": [
+                {
+                    "id": "ENGL_219",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Spring Semester(Even)"
+            ],
             "stub": true
         },
         "ENGL_421": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 421)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Advanced Poetry Writing",
+            "prerequisites": [
+                {
+                    "id": "ENGL_219",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Fall Semester(Even)"
+            ],
             "stub": true
         },
         "ENGL_441": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 441)",
+            "name": "Faulkner and Morrison",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "ENGL_470": {
-            "name": "Unlisted course referenced as prerequisite (ENGL 470)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "ENTH_229": {
-            "name": "Unlisted course referenced as prerequisite (ENTH 229)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "ENTH_230": {
-            "name": "Unlisted course referenced as prerequisite (ENTH 230)",
-            "prerequisites": [],
+            "name": "Seminar",
+            "prerequisites": [
+                {
+                    "id": "ENGL_311",
+                    "type": "required"
+                }
+            ],
             "availability": [],
             "stub": true
         },
         "ENTH_303": {
-            "name": "Unlisted course referenced as prerequisite (ENTH 303)",
+            "name": "Cross-listed English/Theatre Elective",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "FREN_202": {
-            "name": "Unlisted course referenced as prerequisite (FREN 202)",
+            "name": "Intermediate French II",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "HON_102": {
-            "name": "Unlisted course referenced as prerequisite (HON 102)",
+            "name": "FYEH 102",
             "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "HON_202": {
-            "name": "Unlisted course referenced as prerequisite (HON 202)",
+            "name": "Honors 202",
             "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "LSSP_215": {
-            "name": "Unlisted course referenced as prerequisite (LSSP 215)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "LSSP_220": {
-            "name": "Unlisted course referenced as prerequisite (LSSP 220)",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "LSSP_240": {
-            "name": "Unlisted course referenced as prerequisite (LSSP 240)",
-            "prerequisites": [],
-            "availability": [],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "LWPS_230": {
-            "name": "Unlisted course referenced as prerequisite (LWPS 230)",
+            "name": "Introduction to Law",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "MATH_098": {
-            "name": "Unlisted course referenced as prerequisite (MATH 098)",
+            "name": "Algebra Review I",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "MATH_099": {
-            "name": "Unlisted course referenced as prerequisite (MATH 099)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "MATH_100": {
-            "name": "Unlisted course referenced as prerequisite (MATH 100)",
+            "name": "College Algebra",
             "prerequisites": [],
             "availability": [],
             "stub": true
         },
         "MATH_120": {
-            "name": "Unlisted course referenced as prerequisite (MATH 120)",
+            "name": "Pre-Calculus Mathematics",
             "prerequisites": [],
             "availability": [],
             "stub": true
@@ -331,13 +400,28 @@
             "stub": true
         },
         "NUR_203": {
-            "name": "Unlisted course referenced as prerequisite (NUR 203)",
-            "prerequisites": [],
-            "availability": [],
+            "name": "Concepts of Pharmacology and Pathophysiology",
+            "prerequisites": [
+                {
+                    "id": "NUR_200",
+                    "type": "required"
+                },
+                {
+                    "id": "NUR_206",
+                    "type": "required"
+                },
+                {
+                    "id": "BIOL_232",
+                    "type": "required"
+                }
+            ],
+            "availability": [
+                "Spring Semester"
+            ],
             "stub": true
         },
         "PSCI_308": {
-            "name": "Unlisted course referenced as prerequisite (PSCI 308)",
+            "name": "",
             "prerequisites": [],
             "availability": [],
             "stub": true
@@ -1343,11 +1427,6 @@
                 }
             ]
         },
-        "BIOL_110-129": {
-            "name": "Biological Inquiry",
-            "availability": [],
-            "prerequisites": []
-        },
         "BIOL_112": {
             "name": "Biology of Food & Nutrition",
             "availability": [],
@@ -1374,7 +1453,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "BIOL_110-129",
+                    "id": "BIOL_110_129",
                     "type": "required"
                 },
                 {
@@ -1394,7 +1473,7 @@
             ],
             "prerequisites": [
                 {
-                    "id": "BIOL_110-129",
+                    "id": "BIOL_110_129",
                     "type": "required"
                 },
                 {
@@ -1418,7 +1497,7 @@
             ],
             "prerequisites": [
                 {
-                    "id": "BIOL_110-129",
+                    "id": "BIOL_110_129",
                     "type": "required"
                 },
                 {
@@ -1578,18 +1657,6 @@
                 {
                     "id": "BIOL_203",
                     "type": "alternative_dotted"
-                }
-            ]
-        },
-        "BIOL_345-349": {
-            "name": "Field Ecology & Natural History",
-            "availability": [
-                "Summer Semester"
-            ],
-            "prerequisites": [
-                {
-                    "id": "BIOL_201",
-                    "type": "required"
                 }
             ]
         },
@@ -1948,7 +2015,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "ENGL_110-139",
+                    "id": "ENGL_110_139",
                     "type": "alternative_dotted"
                 }
             ]
@@ -2028,7 +2095,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "ENGL_110-139",
+                    "id": "ENGL_110_139",
                     "type": "alternative_dotted"
                 }
             ]
@@ -2044,7 +2111,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "ENGL_110-139",
+                    "id": "ENGL_110_139",
                     "type": "alternative_dotted"
                 }
             ]
@@ -2060,7 +2127,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "ENGL_110-139",
+                    "id": "ENGL_110_139",
                     "type": "alternative_dotted"
                 }
             ]
@@ -2074,7 +2141,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "ENGL_110-139",
+                    "id": "ENGL_110_139",
                     "type": "alternative_dotted"
                 }
             ]
@@ -2100,7 +2167,7 @@
                     "type": "required"
                 },
                 {
-                    "id": "ENGL_110-139",
+                    "id": "ENGL_110_139",
                     "type": "alternative_dotted"
                 }
             ]
@@ -2444,11 +2511,6 @@
                     "type": "required"
                 }
             ]
-        },
-        "CS_###": {
-            "name": "CS Elective",
-            "availability": [],
-            "prerequisites": []
         },
         "CS_100": {
             "name": "Applied Computing I",
@@ -3318,11 +3380,6 @@
         },
         "ENGL_GENRE_6": {
             "name": "Genre 6-Credits",
-            "availability": [],
-            "prerequisites": []
-        },
-        "ENGL_INCL.V.": {
-            "name": "Inclusive Voices 3-Credits",
             "availability": [],
             "prerequisites": []
         },
@@ -6575,15 +6632,15 @@
                     "type": "required"
                 },
                 {
-                    "id": "LSSP_215",
+                    "id": "SPAN_215",
                     "type": "required"
                 },
                 {
-                    "id": "LSSP_220",
+                    "id": "SPAN_220",
                     "type": "required"
                 },
                 {
-                    "id": "LSSP_240",
+                    "id": "SPAN_240",
                     "type": "alternative_dotted"
                 }
             ]
@@ -6861,16 +6918,6 @@
                 }
             ]
         },
-        "CS_###_2": {
-            "name": "CS Elective",
-            "availability": [],
-            "prerequisites": []
-        },
-        "CS_###_3": {
-            "name": "CS Elective",
-            "availability": [],
-            "prerequisites": []
-        },
         "LAB_2": {
             "name": "Lab Science",
             "availability": [],
@@ -7009,18 +7056,6 @@
                 },
                 {
                     "id": "CHEM_209",
-                    "type": "required"
-                }
-            ]
-        },
-        "BIOL_345-349_2": {
-            "name": "Field Ecology & Natural History",
-            "availability": [
-                "Summer Semester"
-            ],
-            "prerequisites": [
-                {
-                    "id": "BIOL_201",
                     "type": "required"
                 }
             ]
@@ -7325,6 +7360,84 @@
                     "type": "alternative_dotted"
                 }
             ]
+        },
+        "ENGL_200LEVEL": {
+            "name": "200-Level English Course (Any)",
+            "prerequisites": [],
+            "availability": [],
+            "stub": true
+        },
+        "ENGL_110_139": {
+            "name": "Writing About Literature",
+            "prerequisites": [],
+            "availability": [],
+            "stub": true
+        },
+        "ENGL_270_289": {
+            "name": "Genre Studies",
+            "prerequisites": [],
+            "availability": [],
+            "stub": true
+        },
+        "ENGL_340_359": {
+            "name": "Writers of Significance",
+            "prerequisites": [
+                {
+                    "id": "ENGL_200LEVEL",
+                    "type": "required"
+                }
+            ],
+            "availability": [],
+            "stub": true
+        },
+        "BIOL_110_129": {
+            "name": "Biological Inquiry",
+            "availability": [],
+            "prerequisites": []
+        },
+        "BIOL_345_349": {
+            "name": "Field Ecology & Natural History",
+            "availability": [
+                "Summer Semester"
+            ],
+            "prerequisites": [
+                {
+                    "id": "BIOL_201",
+                    "type": "required"
+                }
+            ]
+        },
+        "BIOL_345_349_2": {
+            "name": "Field Ecology & Natural History",
+            "availability": [
+                "Summer Semester"
+            ],
+            "prerequisites": [
+                {
+                    "id": "BIOL_201",
+                    "type": "required"
+                }
+            ]
+        },
+        "CS_ELECTIVE_1": {
+            "name": "CS Elective",
+            "availability": [],
+            "prerequisites": []
+        },
+        "CS_ELECTIVE_2": {
+            "name": "CS Elective",
+            "availability": [],
+            "prerequisites": []
+        },
+        "CS_ELECTIVE_3": {
+            "name": "CS Elective",
+            "availability": [],
+            "prerequisites": []
+        },
+        "ENGL_INCL_V": {
+            "name": "Inclusive Voices 3-Credits",
+            "availability": [],
+            "prerequisites": []
         }
     },
     "programs": {
@@ -7587,7 +7700,7 @@
                     "CHEM_403",
                     "CHEM_431",
                     "CHEM_433",
-                    "BIOL_110-129",
+                    "BIOL_110_129",
                     "BIOL_203",
                     "BIOL_331",
                     "BIOL_339",
@@ -7604,7 +7717,7 @@
             "program": "Biology Major, B.A.",
             "requirements": {
                 "Basic": [
-                    "BIOL_110-129",
+                    "BIOL_110_129",
                     "CHEM_101",
                     "CHEM_102",
                     "CHEM_209",
@@ -7785,9 +7898,9 @@
                     "CS_475"
                 ],
                 "Electives 9-Credits": [
-                    "CS_###",
-                    "CS_###_2",
-                    "CS_###_3"
+                    "CS_ELECTIVE_1",
+                    "CS_ELECTIVE_2",
+                    "CS_ELECTIVE_3"
                 ],
                 "Mathematics": [
                     "MATH_201",
@@ -7933,7 +8046,7 @@
                 "Genre 6-Credits": [
                     "ENGL_229",
                     "ENGL_230",
-                    "ENGL_270-289"
+                    "ENGL_270_289"
                 ],
                 "Creative Writing 9-Credits": [
                     "ENGL_219",
@@ -7968,7 +8081,7 @@
                 "Writers 3-Credits": [
                     "ENGL_313",
                     "ENGL_318",
-                    "ENGL_340-359",
+                    "ENGL_340_359",
                     "ENGL_441"
                 ],
                 "Senior Seminar 3-Credits": [
@@ -7985,7 +8098,7 @@
                 "Genre 6-Credits": [
                     "ENGL_229",
                     "ENGL_230",
-                    "ENGL_270-289"
+                    "ENGL_270_289"
                 ],
                 "Theatre Practice 9-Credits": [
                     "THEA_101",
@@ -8026,9 +8139,9 @@
                     "ENGL"
                 ],
                 "Genre 3-Credits": [
-                    "ENTH_229",
-                    "ENTH_230",
-                    "ENGL_270-289"
+                    "ENGL_229",
+                    "ENGL_230",
+                    "ENGL_270_289"
                 ],
                 "Inclusive Voices 3-Credits": [
                     "AFEN_265",
@@ -8053,7 +8166,7 @@
                 "Writers 3-Credits": [
                     "ENGL_313",
                     "ENGL_318",
-                    "ENGL_340-359",
+                    "ENGL_340_359",
                     "ENGL_441"
                 ],
                 "Senior Seminar 3-Credits": [
@@ -8092,7 +8205,7 @@
                 "Electives 12-Credits": [
                     "BIOL_309",
                     "BIOL_331",
-                    "BIOL_345-349",
+                    "BIOL_345_349",
                     "BIOL_451",
                     "CHEM_401",
                     "ENSP_403",
@@ -8126,7 +8239,7 @@
                     "BIOL_337",
                     "BIOL_338",
                     "BIOL_344",
-                    "BIOL_345-349_2",
+                    "BIOL_345_349_2",
                     "BIOL_451_2",
                     "CHEM_401_2",
                     "ENSP_210_2",
