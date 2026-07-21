@@ -61,6 +61,12 @@
     background: #f8fafc; 
     padding: 24px;
     -webkit-overflow-scrolling: touch;
+    cursor: grab;
+}
+
+.viewport.is-panning {
+    cursor: grabbing;
+    user-select: none;
 }
 
 /* 2. NODE APPEARANCE (Default/Unclicked/Locked State) */
@@ -584,7 +590,8 @@
     background: #002244;
 }
 
-#zoomResetBtn {
+#zoomResetBtn,
+#zoomFitBtn {
     width: auto;
     padding: 0 12px;
     font-size: 12px;
@@ -728,4 +735,192 @@
         height: 32px;
         font-size: 16px;
     }
+}
+/* 9. DARK MODE AND GLOBAL ACTIONS STYLING */
+.action-btn {
+    background-color: #e2e8f0;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+    background-color: #cbd5e1;
+}
+
+body.dark-mode {
+    background: #121212 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .hood-header { 
+    background-color: #1a1a1a !important; 
+    border-bottom: 1px solid #333; 
+}
+
+body.dark-mode .hood-logo-text { 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .hood-header h1 { 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .controls-panel { 
+    background: rgba(30, 30, 30, 0.95) !important; 
+    border-color: #444 !important; 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .controls-panel label { 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .viewport { 
+    background: #121212 !important; 
+}
+/* Dark Mode Graph Nodes */
+body.dark-mode .node:not(.selected-node):not(.prereqs-met) rect { 
+    fill: #2c2c2c !important; 
+    stroke: #555 !important; 
+}
+
+body.dark-mode .node.prereqs-met:not(.selected-node) rect { 
+    fill: #1e1e1e !important; 
+    stroke: #4dabf7 !important; 
+}
+
+body.dark-mode .node.selected-node rect { 
+    fill: #1a2e1f !important; 
+    stroke: #2b8a3e !important; 
+}
+
+/* Force all text inside any node state (SVG or HTML labels) to white in dark mode */
+body.dark-mode .node text,
+body.dark-mode .node .nodeLabel,
+body.dark-mode .node span,
+body.dark-mode .node div { 
+    fill: #ffffff !important; 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .edgePath path { 
+    stroke: #555 !important; 
+}
+
+body.dark-mode .edgePath path.selected-edge { 
+    stroke: #2b8a3e !important; 
+}
+
+/* Dark Mode Form Inputs */
+body.dark-mode .search-input-container { 
+    background: #333 !important; 
+    border-color: #555 !important; 
+}
+body.dark-mode .search-input-container input { 
+    background: #333 !important; 
+    color: #ffffff !important; 
+}
+body.dark-mode select { 
+    background: #333 !important; 
+    color: #ffffff !important; 
+    border-color: #555 !important; 
+}
+
+/* Dark Mode Panels & Modals */
+body.dark-mode .recommend-modal { 
+    background: #222 !important; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.8); 
+}
+body.dark-mode .recommend-card { 
+    background: #2a2a2a !important; 
+    border-color: #444 !important; 
+}
+body.dark-mode .recommend-card-title { 
+    color: #ffffff !important; 
+}
+body.dark-mode .recommend-card-name { 
+    color: #ffffff !important; 
+}
+body.dark-mode .recommend-modal-header h3 { 
+    color: #ffffff !important; 
+}
+body.dark-mode .recommend-modal-subtitle { 
+    color: #ffffff !important; 
+}
+body.dark-mode .recommend-close-btn { 
+    color: #ffffff !important; 
+}
+body.dark-mode .recommend-close-btn:hover { 
+    color: #ff6b6b !important; 
+}
+
+body.dark-mode .zoom-controls { 
+    background: rgba(30, 30, 30, 0.95) !important; 
+    border-color: #444 !important; 
+}
+body.dark-mode #zoomLevelLabel { 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .complaint-panel { 
+    background: #1e1e1e !important; 
+    border-color: #444 !important; 
+}
+body.dark-mode .complaint-panel h3, 
+body.dark-mode .complaint-panel label { 
+    color: #ffffff !important; 
+}
+body.dark-mode .complaint-panel p { 
+    color: #ffffff !important; 
+}
+body.dark-mode .complaint-panel input, 
+body.dark-mode .complaint-panel textarea { 
+    background: #333 !important; 
+    color: #ffffff !important; 
+    border-color: #555 !important; 
+}
+
+/* Dark Mode Action Buttons */
+body.dark-mode .action-btn { 
+    background-color: #333; 
+    color: #ffffff; 
+    border-color: #555; 
+}
+body.dark-mode .action-btn:hover { 
+    background-color: #444; 
+}
+
+body.dark-mode .progress-bar-bg { 
+    background: #444 !important; 
+}
+body.dark-mode .progress-text { 
+    color: #ffffff !important; 
+}
+
+body.dark-mode .clear-selection-btn { 
+    color: #ffffff; 
+    border-color: #555; 
+}
+body.dark-mode .clear-selection-btn:hover { 
+    background-color: #333; 
+    color: #ffffff; 
+}
+
+body.dark-mode .remove-major-btn { 
+    background: #333; 
+    color: #ffffff; 
+    border-color: #555; 
+}
+body.dark-mode .remove-major-btn:hover { 
+    background: #444; 
+    color: #ff6b6b; 
+    border-color: #ff6b6b; 
 }

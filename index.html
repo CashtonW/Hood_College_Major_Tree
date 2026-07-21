@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
     <title>Hood College | Academic Major Dependency Trees</title>
     <style>
-        html, body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f6; overflow: hidden; height: 100%; }
+        html, body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f6; overflow: hidden; height: 100%; transition: background-color 0.3s ease, color 0.3s ease; }
         .node { cursor: pointer; }
         #graph-zoom-wrapper { transform-origin: top left; display: inline-block; }
     </style>
@@ -26,56 +26,65 @@
     </header>
 
     <div class="controls-panel">
-        <div class="left-controls">
-            <div class="control-group">
-                <label for="categoryFilter">Select View:</label>
-                <select id="categoryFilter">
-                    <option value="HOME">Home (No Graph)</option>
-                </select>
-                <!-- DOUBLE MAJOR: "+" button. Hidden on the HOME screen (nothing to add a
-                     second major to yet); revealed once a primary major is chosen. Clicking
-                     it reveals the second-major dropdown below. -->
-                <button id="addMajorBtn" class="add-major-btn" title="Add a second major (double major planner)" style="display: none;">+</button>
-            </div>
-
-            <!-- DOUBLE MAJOR: second-major picker. Stays hidden until the user presses
-                 the "+" button above. Choosing a program here merges its requirements
-                 into the same graph, and an "x" removes it again. -->
-            <div class="control-group double-major-group" id="secondMajorWrapper" style="display: none;">
-                <label for="secondMajorFilter">Add Major:</label>
-                <select id="secondMajorFilter">
-                    <option value="">-- Choose second major --</option>
-                </select>
-                <button id="removeSecondMajorBtn" class="remove-major-btn" title="Remove second major">&times;</button>
-            </div>
-
-            <div class="control-group search-group" id="searchWrapper" style="display: none;">
-                <label for="courseSearchInput">Find Course:</label>
-                <div class="search-input-container">
-                    <input type="text" id="courseSearchInput" placeholder="e.g. CHEM 102" autocomplete="off">
-                    <button id="courseSearchBtn">Search</button>
-                </div>
-                <span id="searchFeedbackMessage" class="search-feedback"></span>
-            </div>
-
-            <div class="control-group transcript-group" id="transcriptWrapper" style="display: none;">
-                <label class="transcript-upload-label" for="transcriptFileInput">Import Transcript</label>
-                <input type="file" id="transcriptFileInput" accept="application/pdf" style="display: none;">
-            </div>
-
-            <!-- COURSE RECOMMENDER: opens a panel suggesting 3-5 courses to take next,
-                 based on prerequisites met, the current time of year, and how rarely a
-                 course is offered (see computeRecommendations() in the script below). -->
-            <button id="recommendBtn" class="recommend-btn" style="display: none;">Recommend Courses</button>
-
-            <button id="clearAllBtn" class="clear-selection-btn" style="display: none;">Clear All</button>
+        <!-- NEW GLOBAL ACTIONS: Dark Mode & Menu Toggle -->
+        <div class="global-actions" style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 10px; flex-basis: 100%;">
+            <button id="toggleMenuBtn" class="action-btn">Collapse Menu</button>
+            <button id="darkModeBtn" class="action-btn">🌙 Dark Mode</button>
         </div>
-        
-        <div class="top-progress-container" id="topProgressWrapper" style="display: none;">
-            <div class="progress-bar-bg">
-                <div class="progress-bar-fill" id="checklistProgressFill" style="width: 0%;"></div>
+
+        <!-- COLLAPSIBLE WRAPPER -->
+        <div id="collapsibleMenu" style="display: flex; flex-wrap: wrap; width: 100%; align-items: center; justify-content: space-between; gap: 16px 30px;">
+            <div class="left-controls">
+                <div class="control-group">
+                    <label for="categoryFilter">Select View:</label>
+                    <select id="categoryFilter">
+                        <option value="HOME">Home (No Graph)</option>
+                    </select>
+                    <!-- DOUBLE MAJOR: "+" button. Hidden on the HOME screen (nothing to add a
+                         second major to yet); revealed once a primary major is chosen. Clicking
+                         it reveals the second-major dropdown below. -->
+                    <button id="addMajorBtn" class="add-major-btn" title="Add a second major (double major planner)" style="display: none;">+</button>
+                </div>
+
+                <!-- DOUBLE MAJOR: second-major picker. Stays hidden until the user presses
+                     the "+" button above. Choosing a program here merges its requirements
+                     into the same graph, and an "x" removes it again. -->
+                <div class="control-group double-major-group" id="secondMajorWrapper" style="display: none;">
+                    <label for="secondMajorFilter">Add Major:</label>
+                    <select id="secondMajorFilter">
+                        <option value="">-- Choose second major --</option>
+                    </select>
+                    <button id="removeSecondMajorBtn" class="remove-major-btn" title="Remove second major">&times;</button>
+                </div>
+
+                <div class="control-group search-group" id="searchWrapper" style="display: none;">
+                    <label for="courseSearchInput">Find Course:</label>
+                    <div class="search-input-container">
+                        <input type="text" id="courseSearchInput" placeholder="e.g. CHEM 102" autocomplete="off">
+                        <button id="courseSearchBtn">Search</button>
+                    </div>
+                    <span id="searchFeedbackMessage" class="search-feedback"></span>
+                </div>
+
+                <div class="control-group transcript-group" id="transcriptWrapper" style="display: none;">
+                    <label class="transcript-upload-label" for="transcriptFileInput">Import Transcript</label>
+                    <input type="file" id="transcriptFileInput" accept="application/pdf" style="display: none;">
+                </div>
+
+                <!-- COURSE RECOMMENDER: opens a panel suggesting 3-5 courses to take next,
+                     based on prerequisites met, the current time of year, and how rarely a
+                     course is offered (see computeRecommendations() in the script below). -->
+                <button id="recommendBtn" class="recommend-btn" style="display: none;">Recommend Courses</button>
+
+                <button id="clearAllBtn" class="clear-selection-btn" style="display: none;">Clear All</button>
             </div>
-            <div class="progress-text" id="checklistProgressText">0 / 0 Completed</div>
+            
+            <div class="top-progress-container" id="topProgressWrapper" style="display: none;">
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="checklistProgressFill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-text" id="checklistProgressText">0 / 0 Completed</div>
+            </div>
         </div>
     </div>
 
@@ -103,7 +112,8 @@
             <button id="zoomInBtn" title="Zoom in" aria-label="Zoom in">+</button>
             <span id="zoomLevelLabel">100%</span>
             <button id="zoomOutBtn" title="Zoom out" aria-label="Zoom out">&minus;</button>
-            <button id="zoomResetBtn" title="Reset zoom">Reset</button>
+            <button id="zoomFitBtn" title="Fit whole chart to screen">Fit</button>
+            <button id="zoomResetBtn" title="Reset zoom to 100%">Reset</button>
         </div>
     </div>
 
@@ -133,8 +143,16 @@
         let secondMajorKey = null;               // DOUBLE MAJOR: second major key, or null if not double-majoring
         let completedNodesTracker = new Set();  // Course ids the student has marked "passed"
         let currentDependencyMap = {};           // courseId -> [prerequisite course ids]
+        let currentDependencyTypes = {};         // courseId -> { prerequisiteId: "required" | "corequisite" | "alternative_dotted" }
         let currentCourseMeta = {};              // courseId -> {name, availability, ...} for every node currently on screen (used by the recommender)
         window.triggerReRender = null;           // Global hook for re-rendering layouts
+
+        // LAYOUT ENGINE: when true, the next successful render will automatically scale
+        // the graph to fit the visible viewport (see autoFitGraphZoomToViewport()).
+        // Set whenever the active course-set changes size (new major, double-major
+        // added/removed) so a fresh graph never opens cut off or over-scrolled -
+        // especially important for majors with 30-60+ courses on a mobile screen.
+        let pendingAutoFitZoom = false;
 
         // DOUBLE MAJOR: tracks which selected major(s) each currently-displayed course
         // belongs to, so shared/overlapping requirements can be visually flagged.
@@ -274,6 +292,7 @@
             addMajorBtn.style.display = 'inline-flex';       // DOUBLE MAJOR: reveal the "+" once a real major is picked
             recommendBtn.style.display = 'inline-block';     // RECOMMENDER: reveal once a real major is picked
             resetGraphZoom();
+            pendingAutoFitZoom = true; // fit this newly-selected major's graph to the screen on first render
             requestAnimationFrame(syncAppLayoutOffset);
 
             collectActiveIdsForCurrentSelections();
@@ -488,6 +507,7 @@
             secondMajorKey = progKey;
             collectActiveIdsForCurrentSelections();
             document.getElementById('removeSecondMajorBtn').style.display = 'inline-flex';
+            pendingAutoFitZoom = true; // graph just grew (or shrank) - refit it to the screen
             await renderCombinedGraph();
         }
 
@@ -496,6 +516,7 @@
             secondMajorKey = null;
             document.getElementById('secondMajorFilter').value = '';
             collectActiveIdsForCurrentSelections();
+            pendingAutoFitZoom = true; // graph just shrank back to a single major - refit it
             await renderCombinedGraph();
         }
 
@@ -507,6 +528,7 @@
             const container = document.getElementById('graph-container');
 
             currentDependencyMap = {};
+            currentDependencyTypes = {};
             currentCourseMeta = {};
             courseMajorMembership = {};
             let currentViewNodeTitles = {};
@@ -543,11 +565,13 @@
                 if (!courseMeta) return;
 
                 if (!currentDependencyMap[courseKey]) currentDependencyMap[courseKey] = [];
+                if (!currentDependencyTypes[courseKey]) currentDependencyTypes[courseKey] = {};
 
                 if (courseMeta.prerequisites && Array.isArray(courseMeta.prerequisites)) {
                     courseMeta.prerequisites.forEach(pre => {
                         if (!pre || !pre.id) return;
                         currentDependencyMap[courseKey].push(pre.id);
+                        currentDependencyTypes[courseKey][pre.id] = pre.type || 'required';
 
                         if (!currentViewNodeTitles[pre.id]) {
                             const globalMeta = cachedData.courses[pre.id];
@@ -559,10 +583,15 @@
                 }
             });
 
+            // Builds a node's display label, folding in the double-major "counts for both" flag.
+            function buildNodeLabel(id) {
+                const membership = courseMajorMembership[id];
+                const isShared = membership && membership.has('primary') && membership.has('secondary');
+                return isShared ? `${currentViewNodeTitles[id]}<br/>&#11088; Counts for Both Majors` : currentViewNodeTitles[id];
+            }
+
             // RE-RENDER ENGINE: Wipes and redraws the layout based strictly on data state
             window.triggerReRender = async function() {
-                let graphDefinition = 'graph TD;\n';
-
                 // 1. Calculate which nodes survive the culling process
                 const nodesToDraw = Object.keys(currentViewNodeTitles).filter(id => {
                     const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(id));
@@ -581,24 +610,74 @@
                     return;
                 }
 
+                // ANTI-CLUTTER: majors with many courses/branches used to render at the same
+                // fixed spacing as a 5-course major, producing huge sprawling trees that force
+                // heavy scrolling (especially on mobile). Spacing now tightens as node count grows.
+                const nodeCount = nodesToDraw.length;
+                let rankSpacing = 140, nodeSpacing = 70;
+                if (nodeCount > 45) { rankSpacing = 85; nodeSpacing = 34; }
+                else if (nodeCount > 25) { rankSpacing = 105; nodeSpacing = 46; }
+                else if (nodeCount > 15) { rankSpacing = 120; nodeSpacing = 58; }
+
+                let graphDefinition = `%%{init: {"flowchart": {"rankSpacing": ${rankSpacing}, "nodeSpacing": ${nodeSpacing}}}}%%\ngraph TD;\n`;
+
+                // ALTERNATIVE_DOTTED GROUPING: when a course lists two or more prerequisites
+                // tagged "alternative_dotted" (interchangeable "any one of these" options),
+                // scattering each as its own arrow across the tree is what makes branching
+                // majors so hard to read. Instead, box every alternative_dotted option for a
+                // given course together in one dashed cluster, so the "choose one of these"
+                // relationship reads as a single visual unit instead of loose stray lines.
+                // A course node can only visually live inside one cluster, so if an alternative
+                // option is already claimed by an earlier cluster it's left out of this one and
+                // simply falls back to a normal (still dashed) edge into this course instead.
+                const claimedByCluster = new Set();
+                const altClusters = []; // { clusterId, childId, memberIds }
+                nodesToDraw.forEach(childId => {
+                    const childTypes = currentDependencyTypes[childId] || {};
+                    const altIds = (currentDependencyMap[childId] || []).filter(pid =>
+                        childTypes[pid] === 'alternative_dotted' &&
+                        nodesToDraw.includes(pid) &&
+                        !claimedByCluster.has(pid)
+                    );
+                    if (altIds.length >= 2) {
+                        altIds.forEach(pid => claimedByCluster.add(pid));
+                        altClusters.push({ clusterId: `altgrp_${sanitizeMermaidId(childId)}`, childId, memberIds: altIds });
+                    }
+                });
+                const clusteredNodeIds = new Set();
+                altClusters.forEach(c => c.memberIds.forEach(id => clusteredNodeIds.add(id)));
+
                 // 2. Build the syntax string. Every node/edge id passed to Mermaid goes through
                 //    sanitizeMermaidId() first - this is the fix for the crash that used to happen
                 //    on courses whose raw key contained spaces/hyphens/etc.
-                nodesToDraw.forEach(id => {
-                    const safeId = sanitizeMermaidId(id);
-                    // DOUBLE MAJOR: flag courses that satisfy both selected majors directly in the
-                    // label, so the overlap is obvious no matter what CSS state the node is in.
-                    const membership = courseMajorMembership[id];
-                    const isShared = membership && membership.has('primary') && membership.has('secondary');
-                    const label = isShared ? `${currentViewNodeTitles[id]}<br/>&#11088; Counts for Both Majors` : currentViewNodeTitles[id];
-                    graphDefinition += `  ${safeId}["${label}"];\n`;
+
+                // 2a. Alternative-option clusters first, so their members render grouped inside
+                //     a labeled dashed box rather than scattered among the rest of the tree.
+                altClusters.forEach(({ clusterId, childId, memberIds }) => {
+                    graphDefinition += `  subgraph ${clusterId}["Alternative to ${formatCourseLabel(childId)} (choose one)"]\n`;
+                    memberIds.forEach(id => {
+                        graphDefinition += `    ${sanitizeMermaidId(id)}["${buildNodeLabel(id)}"];\n`;
+                    });
+                    graphDefinition += `  end\n`;
+                    graphDefinition += `  class ${clusterId} altClusterStyle;\n`;
                 });
 
+                // 2b. Every remaining (non-clustered) node, rendered flat as before.
+                nodesToDraw.forEach(id => {
+                    if (clusteredNodeIds.has(id)) return; // already emitted above, inside its cluster
+                    graphDefinition += `  ${sanitizeMermaidId(id)}["${buildNodeLabel(id)}"];\n`;
+                });
+
+                // 2c. Edges. Alternative_dotted prerequisites render as dotted lines (visually
+                //     distinct from a true AND-required solid arrow) whether or not they ended
+                //     up boxed in a cluster above.
                 Object.keys(currentDependencyMap).forEach(id => {
                     if (nodesToDraw.includes(id)) {
+                        const types = currentDependencyTypes[id] || {};
                         currentDependencyMap[id].forEach(parentId => {
                             if (nodesToDraw.includes(parentId)) {
-                                graphDefinition += `  ${sanitizeMermaidId(parentId)} --> ${sanitizeMermaidId(id)};\n`;
+                                const arrow = types[parentId] === 'alternative_dotted' ? '-.->' : '-->';
+                                graphDefinition += `  ${sanitizeMermaidId(parentId)} ${arrow} ${sanitizeMermaidId(id)};\n`;
                             }
                         });
                     }
@@ -609,6 +688,10 @@
                     graphDefinition += `  click ${sanitizeMermaidId(id)} call mermaidNodeClick("${id}");\n`;
                 });
 
+                if (altClusters.length > 0) {
+                    graphDefinition += `  classDef altClusterStyle fill:#fffaf0,stroke:#d4a017,stroke-width:2px,stroke-dasharray: 6 3;\n`;
+                }
+
                 // 3. Mount to DOM
                 try {
                     container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
@@ -616,6 +699,13 @@
                     await mermaid.run({ nodes: [element] });
                     applyGraphState(); // Restore styling to surviving nodes
                     applyDualMajorHighlighting(); // DOUBLE MAJOR: outline courses shared by both majors
+                    // LAYOUT ENGINE: auto-scale a freshly-selected major (or a major/double-major
+                    // combo that just changed) to fit the viewport instead of opening oversized -
+                    // this is the main fix for large majors requiring constant mobile scrolling.
+                    if (pendingAutoFitZoom) {
+                        pendingAutoFitZoom = false;
+                        autoFitGraphZoomToViewport();
+                    }
                 } catch (renderError) {
                     console.error("Mermaid Render Error:", renderError);
                     container.innerHTML = '<p style="color: #003366; font-weight: bold; padding: 20px;">Error drawing the dynamic chart. Verify structural constraints.</p>';
@@ -1003,7 +1093,7 @@
         // a major has 5 courses or 25+.
         // =================================================================
         let currentGraphZoom = 1;
-        const ZOOM_MIN = 0.4, ZOOM_MAX = 2.5, ZOOM_STEP = 0.15;
+        const ZOOM_MIN = 0.2, ZOOM_MAX = 2.5, ZOOM_STEP = 0.15;
 
         function applyGraphZoom() {
             const wrapper = document.getElementById('graph-zoom-wrapper');
@@ -1017,6 +1107,33 @@
             applyGraphZoom();
         }
 
+        // ANTI-CLUTTER: measures the graph's real rendered size against the visible
+        // viewport and scales it down (never up past 100%) so it opens fully in view
+        // instead of requiring the student to manually zoom out and scroll around -
+        // this is what makes a 60-course major usable on a phone screen.
+        function autoFitGraphZoomToViewport() {
+            const wrapper = document.getElementById('graph-zoom-wrapper');
+            const viewport = document.getElementById('viewport');
+            if (!wrapper || !viewport) return;
+
+            wrapper.style.transform = 'scale(1)'; // measure at natural (unscaled) size first
+            const naturalWidth = wrapper.scrollWidth;
+            const naturalHeight = wrapper.scrollHeight;
+            const availableWidth = viewport.clientWidth - 56;
+            const availableHeight = viewport.clientHeight - 56;
+
+            if (!naturalWidth || !naturalHeight || availableWidth <= 0 || availableHeight <= 0) {
+                applyGraphZoom();
+                return;
+            }
+
+            const fitScale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 1);
+            currentGraphZoom = Math.max(ZOOM_MIN, +fitScale.toFixed(2));
+            applyGraphZoom();
+            viewport.scrollTop = 0;
+            viewport.scrollLeft = 0;
+        }
+
         document.getElementById('zoomInBtn').addEventListener('click', () => {
             currentGraphZoom = Math.min(ZOOM_MAX, +(currentGraphZoom + ZOOM_STEP).toFixed(2));
             applyGraphZoom();
@@ -1025,7 +1142,38 @@
             currentGraphZoom = Math.max(ZOOM_MIN, +(currentGraphZoom - ZOOM_STEP).toFixed(2));
             applyGraphZoom();
         });
+        document.getElementById('zoomFitBtn').addEventListener('click', autoFitGraphZoomToViewport);
         document.getElementById('zoomResetBtn').addEventListener('click', resetGraphZoom);
+
+        // ANTI-CLUTTER: click-and-drag panning for large graphs on desktop (touch users
+        // already get native scroll-panning). Dragging never starts on top of a clickable
+        // course node, so course selection isn't disrupted.
+        (function enableDragToPanViewport() {
+            const viewport = document.getElementById('viewport');
+            if (!viewport) return;
+            let isPanning = false;
+            let startX = 0, startY = 0, startScrollLeft = 0, startScrollTop = 0;
+
+            viewport.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.node')) return; // let course clicks through untouched
+                isPanning = true;
+                viewport.classList.add('is-panning');
+                startX = e.pageX;
+                startY = e.pageY;
+                startScrollLeft = viewport.scrollLeft;
+                startScrollTop = viewport.scrollTop;
+            });
+            window.addEventListener('mouseup', () => {
+                isPanning = false;
+                viewport.classList.remove('is-panning');
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                e.preventDefault();
+                viewport.scrollLeft = startScrollLeft - (e.pageX - startX);
+                viewport.scrollTop = startScrollTop - (e.pageY - startY);
+            });
+        })();
 
         // =================================================================
         // EVENT WIRING
@@ -1062,6 +1210,29 @@
         document.getElementById('recommendOverlay').addEventListener('click', (e) => {
             // Clicking the dimmed backdrop (not the modal itself) closes the panel
             if (e.target.id === 'recommendOverlay') hideRecommendationPanel();
+        });
+
+        // =================================================================
+        // NEW FEATURE WIRING: DARK MODE & MENU TOGGLE
+        // =================================================================
+        document.getElementById('darkModeBtn').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            document.getElementById('darkModeBtn').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
+
+        document.getElementById('toggleMenuBtn').addEventListener('click', () => {
+            const menu = document.getElementById('collapsibleMenu');
+            const btn = document.getElementById('toggleMenuBtn');
+            if (menu.style.display === 'none') {
+                menu.style.display = 'flex';
+                btn.textContent = 'Collapse Menu';
+            } else {
+                menu.style.display = 'none';
+                btn.textContent = 'Expand Menu';
+            }
+            // Trigger layout recalculation immediately so the graph layout fits perfectly under the controls.
+            setTimeout(syncAppLayoutOffset, 50); 
         });
 
         (async () => {
