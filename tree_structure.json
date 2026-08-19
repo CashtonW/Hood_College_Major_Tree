@@ -4217,7 +4217,7 @@
             "prerequisites": [
                 {
                     "id": "MATH_120",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -4237,7 +4237,7 @@
             "prerequisites": [
                 {
                     "id": "MATH_120",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -4247,7 +4247,7 @@
             "prerequisites": [
                 {
                     "id": "MATH_120",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -4283,7 +4283,7 @@
             "prerequisites": [
                 {
                     "id": "MATH_120",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 },
                 {
                     "id": "ECMG_212",

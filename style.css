@@ -121,6 +121,64 @@
     stroke-width: 4px !important; 
 }
 
+/* 4b. ROOT-CENTER (RADIAL) LAYOUT
+   The radial renderer draws its own `.node`/`.edgePath` groups (not Mermaid's), so it
+   reuses every rule above for fill/stroke - these rules cover the parts unique to
+   the radial SVG: the foreignObject-based label div, the arrowhead marker, and the
+   spokes connecting the center Major Title node to the first ring of courses. */
+.radial-node-label {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    line-height: 1.25;
+    padding: 4px 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666666;
+    pointer-events: none;
+    box-sizing: border-box;
+}
+.node.prereqs-met:not(.selected-node) .radial-node-label { color: #003366; font-weight: 600; }
+.node.selected-node .radial-node-label { color: #27ae60; font-weight: bold; }
+
+.radial-arrow-head { fill: #cbd5e1; }
+.edgePath.root-spoke path { stroke: #94a3b8 !important; stroke-width: 2.5px !important; }
+
+/* Cross-links are prerequisites that fall outside a course's own branch of the primary
+   tree - kept visually secondary (lighter, thinner) so the main branch structure reads
+   clearly first. Excluded once "selected-edge" is applied so a completed connection still
+   shows its full green highlight. */
+.edgePath.cross-link path:not(.selected-edge) {
+    opacity: 0.45;
+    stroke-width: 1.5px !important;
+}
+
+body.dark-mode .edgePath.cross-link path:not(.selected-edge) { opacity: 0.55; }
+
+/* The center node represents the major itself, not a course - it isn't clickable and
+   always keeps its own navy styling regardless of completion-state classes. */
+.node.major-title-node { cursor: default; }
+.node.major-title-node:not(.selected-node):not(.prereqs-met) rect,
+.node.major-title-node rect {
+    fill: #003366 !important;
+    stroke: #f4b400 !important;
+    stroke-width: 3px !important;
+}
+.node.major-title-node .radial-node-label {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+body.dark-mode .radial-node-label { color: #cbd5e1; }
+body.dark-mode .node.prereqs-met:not(.selected-node) .radial-node-label { color: #7dd3fc; }
+body.dark-mode .node.selected-node .radial-node-label { color: #4ade80; }
+body.dark-mode .radial-arrow-head { fill: #475569; }
+body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
+
 /* Dropdown Filter & Progress Bar Control Panel Styling */
 .controls-panel {
     position: fixed;
@@ -800,6 +858,15 @@ body.dark-mode .node.prereqs-met:not(.selected-node) rect {
 body.dark-mode .node.selected-node rect { 
     fill: #1a2e1f !important; 
     stroke: #2b8a3e !important; 
+}
+
+/* ROOT-CENTER: keep the center Major Title node navy-and-gold in dark mode too, instead
+   of picking up the generic "locked course" gray fill above (placed after that rule so
+   it wins the tie in specificity). */
+body.dark-mode .node.major-title-node:not(.selected-node):not(.prereqs-met) rect,
+body.dark-mode .node.major-title-node rect {
+    fill: #002347 !important;
+    stroke: #f4b400 !important;
 }
 
 /* Force all text inside any node state (SVG or HTML labels) to white in dark mode */

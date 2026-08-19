@@ -46,6 +46,17 @@
                     <button id="addMajorBtn" class="add-major-btn" title="Add a second major (double major planner)" style="display: none;">+</button>
                 </div>
 
+                <!-- LAYOUT SELECTOR: switches the chart between the original top-down
+                     rendering ("Root-Top") and a radial layout ("Root-Center") that places
+                     the major itself in the middle with courses branching outward. -->
+                <div class="control-group">
+                    <label for="layoutModeFilter">Layout:</label>
+                    <select id="layoutModeFilter">
+                        <option value="root-top">Root-Top</option>
+                        <option value="root-center">Root-Center</option>
+                    </select>
+                </div>
+
                 <!-- DOUBLE MAJOR: second-major picker. Stays hidden until the user presses
                      the "+" button above. Choosing a program here merges its requirements
                      into the same graph, and an "x" removes it again. -->
@@ -142,13 +153,15 @@
         let currentSelectionMode = "HOME";       // Primary major key (or "HOME")
         let secondMajorKey = null;               // DOUBLE MAJOR: second major key, or null if not double-majoring
         let completedNodesTracker = new Set();  // Course ids the student has marked "passed"
+        let currentLayoutMode = 'root-top';      // LAYOUT: 'root-top' (original top-down tree) or 'root-center' (radial, major in the middle)
         let currentDependencyMap = {};           // courseId -> [prerequisite course ids]
         let currentDependencyTypes = {};         // courseId -> { prerequisiteId: "required" | "corequisite" | "alternative_dotted" }
         let currentCourseMeta = {};              // courseId -> {name, availability, ...} for every node currently on screen (used by the recommender)
         window.triggerReRender = null;           // Global hook for re-rendering layouts
 
         // LAYOUT ENGINE: when true, the next successful render will automatically scale
-        // the graph to fit the visible viewport (see autoFitGraphZoomToViewport()).
+        // the graph to fit the visible viewport (see fitGraphToViewport() and its two
+        // layout-specific strategies further down).
         // Set whenever the active course-set changes size (new major, double-major
         // added/removed) so a fresh graph never opens cut off or over-scrolled -
         // especially important for majors with 30-60+ courses on a mobile screen.
@@ -207,6 +220,52 @@
             const dept = courseKey.slice(0, idx);
             const rest = courseKey.slice(idx + 1).replace(/_/g, '-');
             return `${dept} ${rest}`;
+        }
+
+        // -----------------------------------------------------------------
+        // SHARED GRAPH-STATE HELPERS
+        // -----------------------------------------------------------------
+        // These three helpers work purely off global state (the dependency map, the
+        // completed-courses set, and the live DOM) so they're identical whether the
+        // active layout is Root-Top (Mermaid) or Root-Center (hand-built radial SVG) -
+        // both layouts render the same `.node` / `.edgePath` shape (see renderRadialLayout
+        // for why). Centralizing them here removes what used to be several near-identical
+        // copies of this same lookup/toggle logic scattered across the click handler and
+        // the state-restoration functions.
+
+        // A course is "isolated" if it has no prerequisites of its own AND nothing else
+        // requires it - i.e. it won't be connected to any edge in the rendered graph.
+        // Isolated nodes are physically removed from the graph once marked complete
+        // (see triggerReRender), so clicking one needs a full re-render rather than a
+        // simple in-place class toggle.
+        function isIsolatedNode(id) {
+            const isRequiredBySomething = Object.values(currentDependencyMap).some(parents => parents.includes(id));
+            const hasOwnPrerequisites = currentDependencyMap[id] && currentDependencyMap[id].length > 0;
+            return !isRequiredBySomething && !hasOwnPrerequisites;
+        }
+
+        // Finds the rendered DOM node for a course by its raw (un-sanitized) id. Mermaid
+        // renders node ids as "flowchart-<safeId>-<n>"; the radial layout uses
+        // "flowchart-<safeId>-radial" - the `.includes()` fallback below matches either.
+        function findCourseDomNode(rawId) {
+            const safeId = sanitizeMermaidId(rawId);
+            return Array.from(document.querySelectorAll('.node'))
+                .find(n => n.id === `flowchart-${safeId}` || n.id.includes(`flowchart-${safeId}-`));
+        }
+
+        // Adds or removes the 'selected-edge' class on the path connecting parentId to
+        // childId. Both layouts tag every edge with "ls-<parent> le-<child>" classes
+        // specifically so this one lookup works no matter which one rendered it.
+        function setEdgeHighlighted(parentId, childId, isHighlighted) {
+            const safeParent = sanitizeMermaidId(parentId);
+            const safeChild = sanitizeMermaidId(childId);
+            document.querySelectorAll('.edgePath').forEach(edge => {
+                const classes = edge.className.baseVal || edge.className;
+                if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeChild}`)) {
+                    const pathElement = edge.querySelector('path');
+                    if (pathElement) pathElement.classList.toggle('selected-edge', isHighlighted);
+                }
+            });
         }
 
         // =================================================================
@@ -590,19 +649,26 @@
                 return isShared ? `${currentViewNodeTitles[id]}<br/>&#11088; Counts for Both Majors` : currentViewNodeTitles[id];
             }
 
-            // RE-RENDER ENGINE: Wipes and redraws the layout based strictly on data state
-            window.triggerReRender = async function() {
-                // 1. Calculate which nodes survive the culling process
-                const nodesToDraw = Object.keys(currentViewNodeTitles).filter(id => {
-                    const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(id));
-                    const hasParents = currentDependencyMap[id] && currentDependencyMap[id].length > 0;
-                    const isIsolated = !isParent && !hasParents;
+            // Builds the "major title" center label for Root-Center layout - the primary
+            // program name, plus the second major's name too when double-majoring.
+            function getRadialRootLabel() {
+                const primaryProg = cachedData.programs[currentSelectionMode];
+                const primaryName = primaryProg ? primaryProg.program : 'Major';
+                if (secondMajorKey && cachedData.programs[secondMajorKey]) {
+                    return `${primaryName}<br/>&amp;<br/>${cachedData.programs[secondMajorKey].program}`;
+                }
+                return primaryName;
+            }
 
-                    // If it is isolated AND completed, we physically exclude it from the render string
-                    if (isIsolated && completedNodesTracker.has(id)) {
-                        return false;
-                    }
-                    return true;
+            // RE-RENDER ENGINE: Wipes and redraws the layout based strictly on data state.
+            // Dispatches to whichever layout the "Layout" dropdown currently has selected -
+            // 'root-top' keeps the original Mermaid top-down tree; 'root-center' draws the
+            // major itself in the middle with every course branching outward from it.
+            window.triggerReRender = async function() {
+                // 1. Calculate which nodes survive the culling process: an isolated node
+                //    (see isIsolatedNode) is physically excluded once it's been completed.
+                const nodesToDraw = Object.keys(currentViewNodeTitles).filter(id => {
+                    return !(isIsolatedNode(id) && completedNodesTracker.has(id));
                 });
 
                 if (nodesToDraw.length === 0) {
@@ -610,6 +676,15 @@
                     return;
                 }
 
+                if (currentLayoutMode === 'root-center') {
+                    await renderRadialLayout(nodesToDraw);
+                } else {
+                    await renderMermaidLayout(nodesToDraw);
+                }
+            };
+
+            // ROOT-TOP LAYOUT: the original top-down Mermaid flowchart rendering.
+            async function renderMermaidLayout(nodesToDraw) {
                 // ANTI-CLUTTER: majors with many courses/branches used to render at the same
                 // fixed spacing as a 5-course major, producing huge sprawling trees that force
                 // heavy scrolling (especially on mobile). Spacing now tightens as node count grows.
@@ -704,50 +779,259 @@
                     // this is the main fix for large majors requiring constant mobile scrolling.
                     if (pendingAutoFitZoom) {
                         pendingAutoFitZoom = false;
-                        autoFitGraphZoomToViewport();
+                        fitFullGraphToViewport();
                     }
                 } catch (renderError) {
                     console.error("Mermaid Render Error:", renderError);
                     container.innerHTML = '<p style="color: #003366; font-weight: bold; padding: 20px;">Error drawing the dynamic chart. Verify structural constraints.</p>';
                 }
-            };
-
-            // STATE RESTORATION ENGINE: Restores visual progress after a layout wipe
-            function findDomNodeBySafeId(safeId) {
-                const nodeElements = Array.from(document.querySelectorAll('.node'));
-                return nodeElements.find(n => n.id === `flowchart-${safeId}` || n.id.includes(`flowchart-${safeId}-`));
             }
 
+            // ROOT-CENTER LAYOUT: a radial rendering built directly as SVG (Mermaid itself has
+            // no radial/DAG layout mode). The primary Major Title node sits at the exact center.
+            //
+            // Two separate ideas drive each node's position:
+            //   - RADIUS comes from "depth": 1 + the deepest of a course's own prerequisites
+            //     already placed, so every real prerequisite -> course edge always points
+            //     strictly outward, the same way Root-Top's tree only ever flows downward.
+            //   - ANGLE comes from a "primary parent" spanning tree, not the raw DAG. Each
+            //     course picks ONE primary prerequisite (its first required one, or its first
+            //     prerequisite at all if every option is an "alternative choose-one"). That
+            //     turns the whole major into a genuine tree for layout purposes, and each
+            //     branch of that tree is given its own angular wedge (sized by how many
+            //     courses ultimately hang off it) that its descendants never leave. That's
+            //     what keeps branches visually separate and readable instead of tangling into
+            //     a web - only the rarer *extra* prerequisite links (a course that also needs
+            //     something outside its own branch) now cross between wedges, and those are
+            //     drawn as thinner, translucent curves so the eye still follows the main
+            //     branches first and reads cross-links as secondary connections.
+            //
+            // The rendered DOM intentionally mirrors Mermaid's own shape (a `.node` group with
+            // a `rect` + label per course, and a `.edgePath` group with classes `ls-<parent>
+            // le-<child>` per connection) so every existing feature - click-to-complete,
+            // dual-major highlighting, search-and-scroll, transcript import, zoom/pan, and
+            // dark mode - keeps working unchanged, without needing to know which layout is active.
+            async function renderRadialLayout(nodesToDraw) {
+                try {
+                    // 1. True depth (longest path over ALL prerequisites) - controls radius only.
+                    const depthOf = {};
+                    const depthVisiting = new Set();
+                    function computeDepth(id) {
+                        if (depthOf[id] !== undefined) return depthOf[id];
+                        if (depthVisiting.has(id)) return 1; // defensive guard against a data cycle
+                        depthVisiting.add(id);
+                        const parents = (currentDependencyMap[id] || []).filter(p => nodesToDraw.includes(p));
+                        const d = parents.length === 0 ? 1 : 1 + Math.max(...parents.map(computeDepth));
+                        depthVisiting.delete(id);
+                        depthOf[id] = d;
+                        return d;
+                    }
+                    nodesToDraw.forEach(computeDepth);
+
+                    const rings = {};
+                    nodesToDraw.forEach(id => { (rings[depthOf[id]] = rings[depthOf[id]] || []).push(id); });
+                    const maxDepth = Math.max(...Object.keys(rings).map(Number));
+
+                    // 2. Primary-parent spanning tree - controls angle only. Preferring a
+                    //    non-alternative ("required"/"corequisite") prerequisite as the primary
+                    //    parent keeps the layout following the main line of study; a course whose
+                    //    only prerequisites are alternative choose-one options just uses the first.
+                    function getPrimaryParent(id) {
+                        const parents = (currentDependencyMap[id] || []).filter(p => nodesToDraw.includes(p));
+                        if (parents.length === 0) return null;
+                        const types = currentDependencyTypes[id] || {};
+                        const required = parents.filter(p => types[p] !== 'alternative_dotted');
+                        return required[0] || parents[0];
+                    }
+                    const primaryParentOf = {};
+                    const primaryChildrenOf = {};
+                    nodesToDraw.forEach(id => {
+                        const pp = getPrimaryParent(id);
+                        primaryParentOf[id] = pp;
+                        if (pp) (primaryChildrenOf[pp] = primaryChildrenOf[pp] || []).push(id);
+                    });
+                    const rootBranches = nodesToDraw.filter(id => !primaryParentOf[id]);
+
+                    // 3. Wedge allocation: each branch's angular width is proportional to how
+                    //    many courses ultimately hang off it (a "sunburst" subdivision), so a
+                    //    branch with 15 downstream courses gets 15x the angular room of a branch
+                    //    with 1, and siblings never overlap into each other's territory.
+                    const weightOf = {};
+                    function computeWeight(id) {
+                        const kids = primaryChildrenOf[id] || [];
+                        if (kids.length === 0) return (weightOf[id] = 1);
+                        let w = 0;
+                        kids.forEach(k => { w += computeWeight(k); });
+                        return (weightOf[id] = w);
+                    }
+                    rootBranches.forEach(computeWeight);
+
+                    const angleOf = {};
+                    function assignWedges(ids, start, end) {
+                        const total = ids.reduce((s, id) => s + weightOf[id], 0) || 1;
+                        let cursor = start;
+                        ids.forEach(id => {
+                            const span = (end - start) * (weightOf[id] / total);
+                            const wedgeStart = cursor, wedgeEnd = cursor + span;
+                            angleOf[id] = (wedgeStart + wedgeEnd) / 2;
+                            const kids = primaryChildrenOf[id] || [];
+                            if (kids.length > 0) assignWedges(kids, wedgeStart, wedgeEnd);
+                            cursor = wedgeEnd;
+                        });
+                    }
+                    assignWedges(rootBranches, 0, 2 * Math.PI);
+
+                    // 4. Radius per depth ring - grows with depth as before, but also grows
+                    //    further whenever a ring's narrowest angular gap is too tight for a
+                    //    node to actually fit there, so tightly-wedged deep branches don't
+                    //    collide with their own siblings.
+                    const nodeCount = nodesToDraw.length;
+                    let ringSpacing = 170;
+                    if (nodeCount > 45) ringSpacing = 115;
+                    else if (nodeCount > 25) ringSpacing = 135;
+                    else if (nodeCount > 15) ringSpacing = 155;
+
+                    const nodeW = 168, nodeH = 56;
+                    const baseRadius = ringSpacing * 1.35;
+                    const radiusOf = {};
+                    let prevRadius = 0;
+                    for (let d = 1; d <= maxDepth; d++) {
+                        const ring = (rings[d] || []).slice().sort((a, b) => angleOf[a] - angleOf[b]);
+                        const naive = d === 1 ? baseRadius : prevRadius + ringSpacing;
+                        let minGap = 2 * Math.PI;
+                        if (ring.length > 1) {
+                            minGap = Infinity;
+                            for (let i = 0; i < ring.length; i++) {
+                                const a1 = angleOf[ring[i]];
+                                const a2 = angleOf[ring[(i + 1) % ring.length]];
+                                const gap = (i === ring.length - 1) ? (a2 + 2 * Math.PI - a1) : (a2 - a1);
+                                if (gap < minGap) minGap = gap;
+                            }
+                        }
+                        const neededByArc = (nodeW + 24) / Math.max(minGap, 0.02);
+                        const r = Math.max(naive, neededByArc);
+                        radiusOf[d] = r;
+                        prevRadius = r;
+                    }
+
+                    const maxRadius = radiusOf[maxDepth] + nodeW;
+                    const canvasSize = Math.ceil(maxRadius * 2 + 80);
+                    const cx = canvasSize / 2, cy = canvasSize / 2;
+
+                    const posOf = {};
+                    nodesToDraw.forEach(id => {
+                        const r = radiusOf[depthOf[id]];
+                        const a = angleOf[id] - Math.PI / 2; // rotate so branches fan out from the top
+                        posOf[id] = { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+                    });
+
+                    // 5. Build the SVG. Edges are drawn first so the node rectangles painted
+                    //    afterward visually cap off each line's ends.
+                    const rootLabel = getRadialRootLabel();
+                    let svg = `<svg id="graph-engine" width="${canvasSize}" height="${canvasSize}" viewBox="0 0 ${canvasSize} ${canvasSize}" xmlns="http://www.w3.org/2000/svg">`;
+                    svg += `<defs><marker id="radialArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="radial-arrow-head"></path></marker></defs>`;
+
+                    svg += `<g class="radial-edges">`;
+                    // Spokes from the center Major Title node out to every entry-point (branch root) course
+                    rootBranches.forEach(id => {
+                        const p = posOf[id];
+                        svg += `<g class="edgePath root-spoke"><path d="M${cx.toFixed(1)},${cy.toFixed(1)} L${p.x.toFixed(1)},${p.y.toFixed(1)}" fill="none" marker-end="url(#radialArrow)"></path></g>`;
+                    });
+                    // Every real prerequisite -> course connection. The primary-parent edge for
+                    // each course is drawn as a straight branch line; any additional prerequisite
+                    // that isn't that primary parent is a cross-link between two branches, drawn
+                    // as a lighter curved line so it reads as secondary rather than tangling with
+                    // the main tree structure.
+                    Object.keys(currentDependencyMap).forEach(childId => {
+                        if (!nodesToDraw.includes(childId) || !posOf[childId]) return;
+                        const types = currentDependencyTypes[childId] || {};
+                        currentDependencyMap[childId].forEach(parentId => {
+                            if (!nodesToDraw.includes(parentId) || !posOf[parentId]) return;
+                            const isAlt = types[parentId] === 'alternative_dotted';
+                            const isPrimary = primaryParentOf[childId] === parentId;
+                            const p = posOf[parentId], c = posOf[childId];
+                            const safeParent = sanitizeMermaidId(parentId), safeChild = sanitizeMermaidId(childId);
+                            let d;
+                            if (isPrimary) {
+                                d = `M${p.x.toFixed(1)},${p.y.toFixed(1)} L${c.x.toFixed(1)},${c.y.toFixed(1)}`;
+                            } else {
+                                // Bow the cross-link's control point in toward the center so it
+                                // visually arcs around other branches instead of cutting straight
+                                // through them.
+                                const mx = (p.x + c.x) / 2, my = (p.y + c.y) / 2;
+                                const qx = cx + (mx - cx) * 0.72, qy = cy + (my - cy) * 0.72;
+                                d = `M${p.x.toFixed(1)},${p.y.toFixed(1)} Q${qx.toFixed(1)},${qy.toFixed(1)} ${c.x.toFixed(1)},${c.y.toFixed(1)}`;
+                            }
+                            svg += `<g class="edgePath ${isPrimary ? '' : 'cross-link'} ls-${safeParent} le-${safeChild}">`;
+                            svg += `<path d="${d}" fill="none" ${isAlt ? 'stroke-dasharray="6 4"' : ''} marker-end="url(#radialArrow)"></path>`;
+                            svg += `</g>`;
+                        });
+                    });
+                    svg += `</g>`;
+
+                    svg += `<g class="radial-nodes">`;
+                    // The center node: the major itself (not clickable - it's not a course)
+                    const rootW = nodeW * 1.5, rootH = nodeH * 1.3;
+                    svg += `<g class="node major-title-node" transform="translate(${(cx - rootW / 2).toFixed(1)},${(cy - rootH / 2).toFixed(1)})">`;
+                    svg += `<rect width="${rootW}" height="${rootH}" rx="10"></rect>`;
+                    svg += `<foreignObject width="${rootW}" height="${rootH}"><div xmlns="http://www.w3.org/1999/xhtml" class="radial-node-label">${rootLabel}</div></foreignObject>`;
+                    svg += `</g>`;
+
+                    nodesToDraw.forEach(id => {
+                        const safeId = sanitizeMermaidId(id);
+                        const p = posOf[id];
+                        svg += `<g class="node" id="flowchart-${safeId}-radial" transform="translate(${(p.x - nodeW / 2).toFixed(1)},${(p.y - nodeH / 2).toFixed(1)})">`;
+                        svg += `<rect width="${nodeW}" height="${nodeH}" rx="8"></rect>`;
+                        svg += `<foreignObject width="${nodeW}" height="${nodeH}"><div xmlns="http://www.w3.org/1999/xhtml" class="radial-node-label">${buildNodeLabel(id)}</div></foreignObject>`;
+                        svg += `</g>`;
+                    });
+                    svg += `</g></svg>`;
+
+                    container.innerHTML = svg;
+
+                    // Mermaid wires clicks via its own "click ... call" directive; here we bind
+                    // the same handler directly to each node group instead.
+                    nodesToDraw.forEach(id => {
+                        const safeId = sanitizeMermaidId(id);
+                        const el = document.getElementById(`flowchart-${safeId}-radial`);
+                        if (el) el.addEventListener('click', () => window.mermaidNodeClick(id));
+                    });
+
+                    applyGraphState(); // Restore styling to surviving nodes
+                    applyDualMajorHighlighting(); // DOUBLE MAJOR: outline courses shared by both majors
+                    if (pendingAutoFitZoom) {
+                        pendingAutoFitZoom = false;
+                        fitRadialGraphToViewport();
+                    }
+                } catch (renderError) {
+                    console.error("Radial Layout Render Error:", renderError);
+                    container.innerHTML = '<p style="color: #003366; font-weight: bold; padding: 20px;">Error drawing the radial chart. Verify structural constraints.</p>';
+                }
+            }
+
+            // STATE RESTORATION ENGINE: re-applies completed/ready-to-take/edge highlighting
+            // after a full layout wipe (a fresh render has no memory of prior clicks).
             function applyGraphState() {
                 // Restore node highlights
                 completedNodesTracker.forEach(id => {
-                    const nodeDom = findDomNodeBySafeId(sanitizeMermaidId(id));
+                    const nodeDom = findCourseDomNode(id);
                     if (nodeDom) nodeDom.classList.add('selected-node');
                 });
 
-                // Restore pathway lines
-                const edges = document.querySelectorAll('.edgePath');
+                // Restore pathway lines: an edge is "selected" once both the course it
+                // leads to and the prerequisite it comes from are marked completed.
                 Object.keys(currentDependencyMap).forEach(childId => {
-                    if (completedNodesTracker.has(childId)) {
-                        currentDependencyMap[childId].forEach(parentId => {
-                            if (completedNodesTracker.has(parentId)) {
-                                const safeParent = sanitizeMermaidId(parentId);
-                                const safeChild = sanitizeMermaidId(childId);
-                                edges.forEach(edge => {
-                                    const classes = edge.className.baseVal || edge.className;
-                                    if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeChild}`)) {
-                                        const pathElement = edge.querySelector('path');
-                                        if (pathElement) pathElement.classList.add('selected-edge');
-                                    }
-                                });
-                            }
-                        });
-                    }
+                    if (!completedNodesTracker.has(childId)) return;
+                    currentDependencyMap[childId].forEach(parentId => {
+                        if (completedNodesTracker.has(parentId)) {
+                            setEdgeHighlighted(parentId, childId, true);
+                        }
+                    });
                 });
 
-                // Restore "Ready to Take" highlights
+                // Restore "Ready to Take" highlights (every prerequisite already completed)
                 Object.keys(currentDependencyMap).forEach(childId => {
-                    const childDomNode = findDomNodeBySafeId(sanitizeMermaidId(childId));
+                    const childDomNode = findCourseDomNode(childId);
                     if (!childDomNode) return;
 
                     const parentIds = currentDependencyMap[childId];
@@ -770,23 +1054,21 @@
                 Object.keys(courseMajorMembership).forEach(courseKey => {
                     const membership = courseMajorMembership[courseKey];
                     if (membership.has('primary') && membership.has('secondary')) {
-                        const nodeDom = findDomNodeBySafeId(sanitizeMermaidId(courseKey));
+                        const nodeDom = findCourseDomNode(courseKey);
                         if (nodeDom) nodeDom.classList.add('dual-major-shared');
                     }
                 });
             }
 
-            // Central Click Manager
+            // Central Click Manager: toggles a course between "completed" and "not yet
+            // completed", cascading the change up (marking prerequisites complete too)
+            // or down (un-completing anything that depended on this course) as needed.
             window.mermaidNodeClick = function(nodeId, skipRender = false) {
-                const isParent = Object.values(currentDependencyMap).some(parents => parents.includes(nodeId));
-                const hasParents = currentDependencyMap[nodeId] && currentDependencyMap[nodeId].length > 0;
-                const isIsolated = !isParent && !hasParents;
-
                 const willBeActive = !completedNodesTracker.has(nodeId);
-                const safeNodeId = sanitizeMermaidId(nodeId);
 
-                // If isolated node clicked: mark complete and trigger structural resize
-                if (isIsolated && willBeActive) {
+                // Isolated node (no edges at all): just mark it and re-render, since
+                // completed isolated nodes are physically removed from the graph.
+                if (isIsolatedNode(nodeId) && willBeActive) {
                     completedNodesTracker.add(nodeId);
                     updateProgressMetrics();
                     if (!skipRender && window.triggerReRender) {
@@ -795,97 +1077,63 @@
                     return;
                 }
 
-                // Standard Node Fast-DOM handling
-                const nodeElements = Array.from(document.querySelectorAll('.node'));
-                const targetNode = nodeElements.find(n => n.id.includes(safeNodeId));
+                // Standard Fast-DOM handling (no full re-render needed)
+                const targetNode = findCourseDomNode(nodeId);
                 if (!targetNode) return;
 
-                function findDomNode(id) { return nodeElements.find(n => n.id.includes(sanitizeMermaidId(id))); }
-
                 if (willBeActive) {
+                    // Marking a course complete also marks every one of its prerequisites
+                    // complete, all the way back up the chain (you can't have taken a
+                    // course without having taken what it required).
                     function highlightAncestors(id) {
-                        const node = findDomNode(id);
+                        const node = findCourseDomNode(id);
                         if (node) node.classList.add('selected-node');
                         completedNodesTracker.add(id);
 
-                        if (currentDependencyMap[id]) {
-                            currentDependencyMap[id].forEach(parentId => {
-                                highlightAncestors(parentId);
-                                const safeParent = sanitizeMermaidId(parentId);
-                                const safeId = sanitizeMermaidId(id);
-                                const edges = document.querySelectorAll('.edgePath');
-                                edges.forEach(edge => {
-                                    const classes = edge.className.baseVal || edge.className;
-                                    if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeId}`)) {
-                                        const pathElement = edge.querySelector('path');
-                                        if (pathElement) pathElement.classList.add('selected-edge');
-                                    }
-                                });
-                            });
-                        }
+                        (currentDependencyMap[id] || []).forEach(parentId => {
+                            highlightAncestors(parentId);
+                            setEdgeHighlighted(parentId, id, true);
+                        });
                     }
                     highlightAncestors(nodeId);
                 } else {
+                    // Un-completing a course also un-completes everything downstream that
+                    // depended on it (you can't still credit a course whose prerequisite
+                    // you just un-checked).
                     targetNode.classList.remove('selected-node');
                     completedNodesTracker.delete(nodeId);
-
-                    if (currentDependencyMap[nodeId]) {
-                        currentDependencyMap[nodeId].forEach(parentId => {
-                            const safeParent = sanitizeMermaidId(parentId);
-                            const edges = document.querySelectorAll('.edgePath');
-                            edges.forEach(edge => {
-                                const classes = edge.className.baseVal || edge.className;
-                                if (classes.includes(`ls-${safeParent}`) && classes.includes(`le-${safeNodeId}`)) {
-                                    const pathElement = edge.querySelector('path');
-                                    if (pathElement) pathElement.classList.remove('selected-edge');
-                                }
-                            });
-                        });
-                    }
+                    (currentDependencyMap[nodeId] || []).forEach(parentId => {
+                        setEdgeHighlighted(parentId, nodeId, false);
+                    });
 
                     function unhighlightDescendants(parentId) {
                         Object.keys(currentDependencyMap).forEach(childId => {
-                            if (currentDependencyMap[childId].includes(parentId)) {
-                                const childNode = findDomNode(childId);
-                                if (childNode && childNode.classList.contains('selected-node')) {
-                                    childNode.classList.remove('selected-node');
-                                    completedNodesTracker.delete(childId);
+                            if (!currentDependencyMap[childId].includes(parentId)) return;
+                            const childNode = findCourseDomNode(childId);
+                            if (!childNode || !childNode.classList.contains('selected-node')) return;
 
-                                    const safeParent2 = sanitizeMermaidId(parentId);
-                                    const safeChild2 = sanitizeMermaidId(childId);
-                                    const edges = document.querySelectorAll('.edgePath');
-                                    edges.forEach(edge => {
-                                        const classes = edge.className.baseVal || edge.className;
-                                        if (classes.includes(`ls-${safeParent2}`) && classes.includes(`le-${safeChild2}`)) {
-                                            const pathElement = edge.querySelector('path');
-                                            if (pathElement) pathElement.classList.remove('selected-edge');
-                                        }
-                                    });
-                                    unhighlightDescendants(childId);
-                                }
-                            }
+                            childNode.classList.remove('selected-node');
+                            completedNodesTracker.delete(childId);
+                            setEdgeHighlighted(parentId, childId, false);
+                            unhighlightDescendants(childId);
                         });
                     }
                     unhighlightDescendants(nodeId);
                 }
 
+                // Refresh every course's "Ready to Take" state (all prerequisites completed)
                 Object.keys(currentDependencyMap).forEach(childId => {
-                    const childDomNode = findDomNode(childId);
+                    const childDomNode = findCourseDomNode(childId);
                     if (!childDomNode) return;
 
                     const parentIds = currentDependencyMap[childId];
                     if (parentIds.length === 0) return;
 
                     const allParentsHighlighted = parentIds.every(parentId => {
-                        const parentDomNode = findDomNode(parentId);
+                        const parentDomNode = findCourseDomNode(parentId);
                         return parentDomNode && parentDomNode.classList.contains('selected-node');
                     });
-
-                    if (allParentsHighlighted) {
-                        childDomNode.classList.add('prereqs-met');
-                    } else {
-                        childDomNode.classList.remove('prereqs-met');
-                    }
+                    childDomNode.classList.toggle('prereqs-met', allParentsHighlighted);
                 });
 
                 updateProgressMetrics();
@@ -1107,31 +1355,77 @@
             applyGraphZoom();
         }
 
-        // ANTI-CLUTTER: measures the graph's real rendered size against the visible
-        // viewport and scales it down (never up past 100%) so it opens fully in view
-        // instead of requiring the student to manually zoom out and scroll around -
-        // this is what makes a 60-course major usable on a phone screen.
-        function autoFitGraphZoomToViewport() {
+        // Reads the graph's natural (unscaled) rendered size and the viewport's usable
+        // area. Shared by both fit strategies below so they measure the same way.
+        // Returns null if either element is missing or has no measurable size.
+        function measureGraphAndViewport() {
             const wrapper = document.getElementById('graph-zoom-wrapper');
             const viewport = document.getElementById('viewport');
-            if (!wrapper || !viewport) return;
+            if (!wrapper || !viewport) return null;
 
             wrapper.style.transform = 'scale(1)'; // measure at natural (unscaled) size first
             const naturalWidth = wrapper.scrollWidth;
             const naturalHeight = wrapper.scrollHeight;
-            const availableWidth = viewport.clientWidth - 56;
+            const availableWidth = viewport.clientWidth - 56;   // 56px = breathing room on each side
             const availableHeight = viewport.clientHeight - 56;
 
             if (!naturalWidth || !naturalHeight || availableWidth <= 0 || availableHeight <= 0) {
-                applyGraphZoom();
-                return;
+                return null;
             }
+            return { wrapper, viewport, naturalWidth, naturalHeight, availableWidth, availableHeight };
+        }
 
-            const fitScale = Math.min(availableWidth / naturalWidth, availableHeight / naturalHeight, 1);
+        // ANTI-CLUTTER (Root-Top): measures the graph's real rendered size against the
+        // visible viewport and scales it down (never up past 100%) so it opens fully in
+        // view instead of requiring the student to manually zoom out and scroll around -
+        // this is what makes a 60-course major usable on a phone screen.
+        function fitFullGraphToViewport() {
+            const m = measureGraphAndViewport();
+            if (!m) { applyGraphZoom(); return; }
+
+            const fitScale = Math.min(m.availableWidth / m.naturalWidth, m.availableHeight / m.naturalHeight, 1);
             currentGraphZoom = Math.max(ZOOM_MIN, +fitScale.toFixed(2));
             applyGraphZoom();
-            viewport.scrollTop = 0;
-            viewport.scrollLeft = 0;
+            m.viewport.scrollTop = 0;
+            m.viewport.scrollLeft = 0;
+        }
+
+        // ROOT-CENTER FIT: shrinking a large radial tree down until every branch fits
+        // on screen (the Root-Top strategy above) can push small print past the point of
+        // being readable once a major has 20-30+ courses. Root-Center instead holds zoom
+        // at a fixed legible floor (RADIAL_READABLE_ZOOM) - or a gentler fit if the graph
+        // is small enough to need less shrinking than that - and centers the viewport on
+        // the middle of the canvas. Because the major-title root node is always placed at
+        // the exact geometric center of the radial canvas (see renderRadialLayout), that
+        // also means centering the root itself. Outer branches may fall outside the
+        // visible area at this zoom; the student can pan/scroll out to reach them.
+        const RADIAL_READABLE_ZOOM = 0.67;
+
+        function fitRadialGraphToViewport() {
+            const m = measureGraphAndViewport();
+            if (!m) { applyGraphZoom(); return; }
+
+            const naturalFitScale = Math.min(m.availableWidth / m.naturalWidth, m.availableHeight / m.naturalHeight, 1);
+            const targetScale = Math.min(ZOOM_MAX, Math.max(naturalFitScale, RADIAL_READABLE_ZOOM));
+            currentGraphZoom = Math.max(ZOOM_MIN, +targetScale.toFixed(2));
+            applyGraphZoom();
+
+            // Center the scroll position on the middle of the scaled content (= the root
+            // node) rather than resetting to the top-left corner used by the full-fit above.
+            const scaledWidth = m.naturalWidth * currentGraphZoom;
+            const scaledHeight = m.naturalHeight * currentGraphZoom;
+            m.viewport.scrollLeft = Math.max(0, (scaledWidth - m.viewport.clientWidth) / 2);
+            m.viewport.scrollTop = Math.max(0, (scaledHeight - m.viewport.clientHeight) / 2);
+        }
+
+        // Dispatches the "Fit" button/auto-fit-on-render to whichever strategy matches
+        // the currently active layout.
+        function fitGraphToViewport() {
+            if (currentLayoutMode === 'root-center') {
+                fitRadialGraphToViewport();
+            } else {
+                fitFullGraphToViewport();
+            }
         }
 
         document.getElementById('zoomInBtn').addEventListener('click', () => {
@@ -1142,7 +1436,7 @@
             currentGraphZoom = Math.max(ZOOM_MIN, +(currentGraphZoom - ZOOM_STEP).toFixed(2));
             applyGraphZoom();
         });
-        document.getElementById('zoomFitBtn').addEventListener('click', autoFitGraphZoomToViewport);
+        document.getElementById('zoomFitBtn').addEventListener('click', fitGraphToViewport);
         document.getElementById('zoomResetBtn').addEventListener('click', resetGraphZoom);
 
         // ANTI-CLUTTER: click-and-drag panning for large graphs on desktop (touch users
@@ -1181,6 +1475,16 @@
         const filterSelect = document.getElementById('categoryFilter');
         filterSelect.addEventListener('change', (e) => {
             updateView(e.target.value);
+        });
+
+        // LAYOUT SELECTOR wiring: switch between Root-Top (top-down) and Root-Center
+        // (radial, major in the middle) and redraw the current selection in that layout.
+        document.getElementById('layoutModeFilter').addEventListener('change', async (e) => {
+            currentLayoutMode = e.target.value;
+            if (currentSelectionMode !== 'HOME' && window.triggerReRender) {
+                pendingAutoFitZoom = true; // the new layout has very different proportions - refit it
+                await window.triggerReRender();
+            }
         });
 
         document.getElementById('courseSearchBtn').addEventListener('click', handleCourseSearchExecution);
