@@ -8,7 +8,7 @@
     <style>
         html, body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background: #f4f7f6; overflow: hidden; height: 100%; transition: background-color 0.3s ease, color 0.3s ease; }
         .node { cursor: pointer; }
-        #graph-zoom-wrapper { transform-origin: top left; display: inline-block; }
+        #graph-zoom-wrapper { display: inline-block; zoom: 1; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script>
@@ -29,7 +29,7 @@
         <!-- NEW GLOBAL ACTIONS: Dark Mode & Menu Toggle -->
         <div class="global-actions" style="width: 100%; display: flex; justify-content: space-between; margin-bottom: 10px; flex-basis: 100%;">
             <button id="toggleMenuBtn" class="action-btn">Collapse Menu</button>
-            <button id="darkModeBtn" class="action-btn">🌙 Dark Mode</button>
+            <button id="darkModeBtn" class="action-btn"> Dark Mode</button>
         </div>
 
         <!-- COLLAPSIBLE WRAPPER -->
@@ -110,6 +110,39 @@
             </div>
             <p class="recommend-modal-subtitle" id="recommendSubtitle"></p>
             <div id="recommendResultsList" class="recommend-results-list"></div>
+            <div class="degree-plan-launcher">
+                <div>
+                    <h4>Plan the rest of your degree</h4>
+                    <p>Build a suggested term-by-term path using your completed courses, prerequisites, and course availability.</p>
+                </div>
+                <div class="degree-plan-actions">
+                    <label for="planStartSemester">Start term</label>
+                    <select id="planStartSemester">
+                        <option value="Fall">Fall</option>
+                        <option value="Spring">Spring</option>
+                    </select>
+                    <label for="coursesPerTerm">Classes per term</label>
+                    <select id="coursesPerTerm">
+                        <option value="3">3 classes</option>
+                        <option value="4" selected>4 classes</option>
+                        <option value="5">5 classes</option>
+                        <option value="6">6 classes</option>
+                    </select>
+                    <label for="planSemesters">Plan length</label>
+                    <select id="planSemesters">
+                        <option value="1">1 semester</option>
+                        <option value="2">2 semesters</option>
+                        <option value="3">3 semesters</option>
+                        <option value="4">4 semesters</option>
+                        <option value="5">5 semesters</option>
+                        <option value="6">6 semesters</option>
+                        <option value="7">7 semesters</option>
+                        <option value="8" selected>8 semesters</option>
+                    </select>
+                    <button id="buildDegreePlanBtn" type="button" class="degree-plan-btn">Build My Plan</button>
+                </div>
+            </div>
+            <div id="degreePlanResults" class="degree-plan-results" aria-live="polite"></div>
         </div>
     </div>
 
@@ -232,17 +265,6 @@
         // for why). Centralizing them here removes what used to be several near-identical
         // copies of this same lookup/toggle logic scattered across the click handler and
         // the state-restoration functions.
-
-        // A course is "isolated" if it has no prerequisites of its own AND nothing else
-        // requires it - i.e. it won't be connected to any edge in the rendered graph.
-        // Isolated nodes are physically removed from the graph once marked complete
-        // (see triggerReRender), so clicking one needs a full re-render rather than a
-        // simple in-place class toggle.
-        function isIsolatedNode(id) {
-            const isRequiredBySomething = Object.values(currentDependencyMap).some(parents => parents.includes(id));
-            const hasOwnPrerequisites = currentDependencyMap[id] && currentDependencyMap[id].length > 0;
-            return !isRequiredBySomething && !hasOwnPrerequisites;
-        }
 
         // Finds the rendered DOM node for a course by its raw (un-sanitized) id. Mermaid
         // renders node ids as "flowchart-<safeId>-<n>"; the radial layout uses
@@ -438,13 +460,6 @@
             const safeTarget = sanitizeMermaidId(targetIdString);
             const nodeElements = Array.from(document.querySelectorAll('.node'));
             const destinationDomNode = nodeElements.find(n => n.id.includes(`flowchart-${safeTarget}-`) || n.id === `flowchart-${safeTarget}`);
-
-            // If node was isolated, clicked, and successfully removed from rendering
-            if (!destinationDomNode && completedNodesTracker.has(targetIdString)) {
-                feedbackText.style.color = '#38a169';
-                feedbackText.textContent = 'Course is already completed and hidden.';
-                return;
-            }
 
             if (destinationDomNode && typeof window.mermaidNodeClick === 'function') {
                 destinationDomNode.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
@@ -644,9 +659,10 @@
 
             // Builds a node's display label, folding in the double-major "counts for both" flag.
             function buildNodeLabel(id) {
-                const membership = courseMajorMembership[id];
-                const isShared = membership && membership.has('primary') && membership.has('secondary');
-                return isShared ? `${currentViewNodeTitles[id]}<br/>&#11088; Counts for Both Majors` : currentViewNodeTitles[id];
+                // Shared courses already receive a distinct gold dashed outline. Keeping
+                // their label identical to every other course prevents a third line of
+                // text from making Mermaid shrink a double-major node's usable label area.
+                return currentViewNodeTitles[id];
             }
 
             // Builds the "major title" center label for Root-Center layout - the primary
@@ -665,11 +681,10 @@
             // 'root-top' keeps the original Mermaid top-down tree; 'root-center' draws the
             // major itself in the middle with every course branching outward from it.
             window.triggerReRender = async function() {
-                // 1. Calculate which nodes survive the culling process: an isolated node
-                //    (see isIsolatedNode) is physically excluded once it's been completed.
-                const nodesToDraw = Object.keys(currentViewNodeTitles).filter(id => {
-                    return !(isIsolatedNode(id) && completedNodesTracker.has(id));
-                });
+                // Keep every course visible, including standalone electives that have no
+                // prerequisite links. Completion is shown through styling, never by removing
+                // a node from the chart.
+                const nodesToDraw = Object.keys(currentViewNodeTitles);
 
                 if (nodesToDraw.length === 0) {
                     container.innerHTML = '<p style="text-align: center; margin-top: 40px; color: #38a169; font-weight: bold; font-size: 20px;">All program requirements completed!</p>';
@@ -696,56 +711,17 @@
 
                 let graphDefinition = `%%{init: {"flowchart": {"rankSpacing": ${rankSpacing}, "nodeSpacing": ${nodeSpacing}}}}%%\ngraph TD;\n`;
 
-                // ALTERNATIVE_DOTTED GROUPING: when a course lists two or more prerequisites
-                // tagged "alternative_dotted" (interchangeable "any one of these" options),
-                // scattering each as its own arrow across the tree is what makes branching
-                // majors so hard to read. Instead, box every alternative_dotted option for a
-                // given course together in one dashed cluster, so the "choose one of these"
-                // relationship reads as a single visual unit instead of loose stray lines.
-                // A course node can only visually live inside one cluster, so if an alternative
-                // option is already claimed by an earlier cluster it's left out of this one and
-                // simply falls back to a normal (still dashed) edge into this course instead.
-                const claimedByCluster = new Set();
-                const altClusters = []; // { clusterId, childId, memberIds }
-                nodesToDraw.forEach(childId => {
-                    const childTypes = currentDependencyTypes[childId] || {};
-                    const altIds = (currentDependencyMap[childId] || []).filter(pid =>
-                        childTypes[pid] === 'alternative_dotted' &&
-                        nodesToDraw.includes(pid) &&
-                        !claimedByCluster.has(pid)
-                    );
-                    if (altIds.length >= 2) {
-                        altIds.forEach(pid => claimedByCluster.add(pid));
-                        altClusters.push({ clusterId: `altgrp_${sanitizeMermaidId(childId)}`, childId, memberIds: altIds });
-                    }
-                });
-                const clusteredNodeIds = new Set();
-                altClusters.forEach(c => c.memberIds.forEach(id => clusteredNodeIds.add(id)));
-
-                // 2. Build the syntax string. Every node/edge id passed to Mermaid goes through
+                // Build the syntax string. Every node/edge id passed to Mermaid goes through
                 //    sanitizeMermaidId() first - this is the fix for the crash that used to happen
                 //    on courses whose raw key contained spaces/hyphens/etc.
-
-                // 2a. Alternative-option clusters first, so their members render grouped inside
-                //     a labeled dashed box rather than scattered among the rest of the tree.
-                altClusters.forEach(({ clusterId, childId, memberIds }) => {
-                    graphDefinition += `  subgraph ${clusterId}["Alternative to ${formatCourseLabel(childId)} (choose one)"]\n`;
-                    memberIds.forEach(id => {
-                        graphDefinition += `    ${sanitizeMermaidId(id)}["${buildNodeLabel(id)}"];\n`;
-                    });
-                    graphDefinition += `  end\n`;
-                    graphDefinition += `  class ${clusterId} altClusterStyle;\n`;
-                });
-
-                // 2b. Every remaining (non-clustered) node, rendered flat as before.
+                // Alternative choices remain ordinary course nodes. Their dashed links show
+                // that a single option is sufficient without wrapping the courses in a box.
                 nodesToDraw.forEach(id => {
-                    if (clusteredNodeIds.has(id)) return; // already emitted above, inside its cluster
                     graphDefinition += `  ${sanitizeMermaidId(id)}["${buildNodeLabel(id)}"];\n`;
                 });
 
-                // 2c. Edges. Alternative_dotted prerequisites render as dotted lines (visually
-                //     distinct from a true AND-required solid arrow) whether or not they ended
-                //     up boxed in a cluster above.
+                // Alternative prerequisites retain a dotted link, while required
+                // prerequisites retain a solid link.
                 Object.keys(currentDependencyMap).forEach(id => {
                     if (nodesToDraw.includes(id)) {
                         const types = currentDependencyTypes[id] || {};
@@ -758,14 +734,68 @@
                     }
                 });
 
+                // Keep disconnected requirement groups from expanding the chart into a
+                // very wide row. Mermaid otherwise places independent electives and
+                // separate course clusters beside the main tree. We add invisible layout
+                // links between components so those groups are stacked underneath instead.
+                // These are positioning-only links: they create no displayed prerequisite.
+                const nodeSet = new Set(nodesToDraw);
+                const neighbors = new Map(nodesToDraw.map(id => [id, new Set()]));
+                nodesToDraw.forEach(childId => {
+                    (currentDependencyMap[childId] || []).forEach(parentId => {
+                        if (!nodeSet.has(parentId)) return;
+                        neighbors.get(childId).add(parentId);
+                        neighbors.get(parentId).add(childId);
+                    });
+                });
+
+                const seenNodes = new Set();
+                const components = [];
+                nodesToDraw.forEach(startId => {
+                    if (seenNodes.has(startId)) return;
+                    const component = [];
+                    const pending = [startId];
+                    seenNodes.add(startId);
+                    while (pending.length) {
+                        const id = pending.pop();
+                        component.push(id);
+                        neighbors.get(id).forEach(neighborId => {
+                            if (!seenNodes.has(neighborId)) {
+                                seenNodes.add(neighborId);
+                                pending.push(neighborId);
+                            }
+                        });
+                    }
+                    components.push(component);
+                });
+
+                if (components.length > 1) {
+                    components.sort((a, b) => b.length - a.length);
+                    const findComponentStart = component => {
+                        const componentSet = new Set(component);
+                        return component.find(id =>
+                            !(currentDependencyMap[id] || []).some(parentId => componentSet.has(parentId))
+                        ) || component[0];
+                    };
+                    const findComponentEnd = component => {
+                        const componentSet = new Set(component);
+                        return component.find(id => !Object.keys(currentDependencyMap).some(childId =>
+                            componentSet.has(childId) && (currentDependencyMap[childId] || []).includes(id)
+                        )) || component[0];
+                    };
+
+                    let previousAnchor = findComponentEnd(components[0]);
+                    components.slice(1).forEach(component => {
+                        const nextAnchor = findComponentStart(component);
+                        graphDefinition += `  ${sanitizeMermaidId(previousAnchor)} ~~~ ${sanitizeMermaidId(nextAnchor)};\n`;
+                        previousAnchor = nextAnchor;
+                    });
+                }
+
                 graphDefinition += `\n`;
                 nodesToDraw.forEach(id => {
                     graphDefinition += `  click ${sanitizeMermaidId(id)} call mermaidNodeClick("${id}");\n`;
                 });
-
-                if (altClusters.length > 0) {
-                    graphDefinition += `  classDef altClusterStyle fill:#fffaf0,stroke:#d4a017,stroke-width:2px,stroke-dasharray: 6 3;\n`;
-                }
 
                 // 3. Mount to DOM
                 try {
@@ -1066,17 +1096,6 @@
             window.mermaidNodeClick = function(nodeId, skipRender = false) {
                 const willBeActive = !completedNodesTracker.has(nodeId);
 
-                // Isolated node (no edges at all): just mark it and re-render, since
-                // completed isolated nodes are physically removed from the graph.
-                if (isIsolatedNode(nodeId) && willBeActive) {
-                    completedNodesTracker.add(nodeId);
-                    updateProgressMetrics();
-                    if (!skipRender && window.triggerReRender) {
-                        window.triggerReRender();
-                    }
-                    return;
-                }
-
                 // Standard Fast-DOM handling (no full re-render needed)
                 const targetNode = findCourseDomNode(nodeId);
                 if (!targetNode) return;
@@ -1200,14 +1219,26 @@
             return { semester: null, parity: null };
         }
 
-        // A course's listed semester is "relevant" right now if it matches the current
-        // semester - with one deliberate exception: while planning during Summer, Fall
-        // courses are also relevant, since that's exactly when students register for Fall.
+        // The quick recommender always plans for one upcoming academic term, never the
+        // term already in progress.
         function isSemesterRelevant(courseSemester, currentSemester) {
-            if (currentSemester === 'Summer') {
-                return courseSemester === 'Fall' || courseSemester === 'Summer';
-            }
             return courseSemester === currentSemester;
+        }
+
+        function getUpcomingAcademicTerm() {
+            const now = new Date();
+            const month = now.getMonth() + 1;
+            const year = now.getFullYear();
+            // Fall and winter (September through February) point to Spring; spring
+            // and summer (March through August) point to Fall.
+            if (month >= 9) {
+                const springYear = year + 1;
+                return { semester: 'Spring', year: springYear, parity: (springYear % 2 === 0) ? 'Even' : 'Odd' };
+            }
+            if (month <= 2) {
+                return { semester: 'Spring', year, parity: (year % 2 === 0) ? 'Even' : 'Odd' };
+            }
+            return { semester: 'Fall', year, parity: (year % 2 === 0) ? 'Even' : 'Odd' };
         }
 
         // Scores a single course for the recommendation engine.
@@ -1281,8 +1312,10 @@
             const overlay = document.getElementById('recommendOverlay');
             const subtitle = document.getElementById('recommendSubtitle');
             const resultsList = document.getElementById('recommendResultsList');
+            document.getElementById('degreePlanResults').innerHTML = '';
 
             subtitle.textContent = `Based on prerequisites met, and ${term.semester} ${term.year} course availability.`;
+            document.getElementById('planStartSemester').value = getPlanningStartTerm().semester;
 
             if (list.length === 0) {
                 resultsList.innerHTML = '<p style="color:#666; padding: 10px 0;">No eligible courses were found for the current term. Try marking more completed prerequisites, or check back next semester.</p>';
@@ -1304,6 +1337,89 @@
 
         function hideRecommendationPanel() {
             document.getElementById('recommendOverlay').style.display = 'none';
+        }
+
+        function getPlanningStartTerm() {
+            const term = getUpcomingAcademicTerm();
+            return term.semester === 'Summer' ? { semester: 'Fall', year: term.year } : term;
+        }
+
+        function getPlanningStartYear(startingSemester) {
+            const currentTerm = getCurrentTermInfo();
+            // Selecting Spring during a Fall term means the next calendar year's Spring.
+            return startingSemester === 'Spring' && currentTerm.semester === 'Fall'
+                ? currentTerm.year + 1
+                : currentTerm.year;
+        }
+
+        function getNextAcademicTerm(term) {
+            return term.semester === 'Fall'
+                ? { semester: 'Spring', year: term.year + 1, parity: ((term.year + 1) % 2 === 0) ? 'Even' : 'Odd' }
+                : { semester: 'Fall', year: term.year, parity: (term.year % 2 === 0) ? 'Even' : 'Odd' };
+        }
+
+        function isCourseAvailableForPlan(meta, term) {
+            const availability = meta.availability || [];
+            if (availability.length === 0) return true;
+            return availability.some(entry => {
+                const parsed = parseAvailabilityEntry(entry);
+                return (!parsed.semester || parsed.semester === term.semester) &&
+                    (!parsed.parity || parsed.parity === term.parity);
+            });
+        }
+
+        function buildDegreePlan() {
+            const coursesPerTerm = Number(document.getElementById('coursesPerTerm').value);
+            const planSemesters = Number(document.getElementById('planSemesters').value);
+            const startingSemester = document.getElementById('planStartSemester').value;
+            const results = document.getElementById('degreePlanResults');
+            const remaining = Object.keys(currentCourseMeta).filter(id => !completedNodesTracker.has(id));
+            const plannedOrCompleted = new Set(completedNodesTracker);
+            const terms = [];
+            let term = { semester: startingSemester, year: getPlanningStartYear(startingSemester) };
+            term.parity = (term.year % 2 === 0) ? 'Even' : 'Odd';
+            const maximumTerms = planSemesters;
+
+            for (let termIndex = 0; termIndex < maximumTerms && remaining.length > 0; termIndex++) {
+                const eligible = remaining.filter(courseKey => {
+                    const prerequisites = currentDependencyMap[courseKey] || [];
+                    return prerequisites.every(prerequisite => plannedOrCompleted.has(prerequisite)) &&
+                        isCourseAvailableForPlan(currentCourseMeta[courseKey] || {}, term);
+                });
+
+                eligible.sort((a, b) => {
+                    const aRare = (currentCourseMeta[a]?.availability || []).some(entry => /Even|Odd/i.test(entry));
+                    const bRare = (currentCourseMeta[b]?.availability || []).some(entry => /Even|Odd/i.test(entry));
+                    return Number(bRare) - Number(aRare) || a.localeCompare(b);
+                });
+
+                const scheduled = eligible.slice(0, coursesPerTerm);
+                if (scheduled.length > 0) {
+                    scheduled.forEach(courseKey => {
+                        plannedOrCompleted.add(courseKey);
+                        remaining.splice(remaining.indexOf(courseKey), 1);
+                    });
+                    terms.push({ term: { ...term }, courses: scheduled });
+                }
+                term = getNextAcademicTerm(term);
+            }
+
+            if (terms.length === 0) {
+                results.innerHTML = '<p class="degree-plan-note">No remaining courses can be scheduled with the currently available prerequisite information.</p>';
+                return;
+            }
+
+            const termCards = terms.map(item => `
+                <section class="degree-plan-term">
+                    <h4>${item.term.semester} ${item.term.year}</h4>
+                    <p>${item.courses.length} planned ${item.courses.length === 1 ? 'class' : 'classes'}</p>
+                    <ul>${item.courses.map(courseKey => `<li><strong>${formatCourseLabel(courseKey)}</strong><span>${(currentCourseMeta[courseKey] || {}).name || 'Course requirement'}</span></li>`).join('')}</ul>
+                </section>
+            `).join('');
+            const unscheduled = remaining.length
+                ? `<p class="degree-plan-note">${remaining.length} course${remaining.length === 1 ? '' : 's'} did not fit within your selected ${planSemesters}-semester plan, or could not be scheduled because prerequisite or availability information is incomplete.</p>`
+                : `<p class="degree-plan-note">This ${planSemesters}-semester plan includes every remaining course shown in your dependency tree.</p>`;
+            results.innerHTML = `<h3>Your suggested plan</h3>${termCards}${unscheduled}`;
         }
 
         // =================================================================
@@ -1345,7 +1461,10 @@
 
         function applyGraphZoom() {
             const wrapper = document.getElementById('graph-zoom-wrapper');
-            if (wrapper) wrapper.style.transform = `scale(${currentGraphZoom})`;
+            // CSS zoom changes the element's layout footprint as well as its appearance.
+            // A transform only changed the appearance, leaving an oversized invisible
+            // scroll area behind and making the chart appear cut off after resizing.
+            if (wrapper) wrapper.style.zoom = String(currentGraphZoom);
             const label = document.getElementById('zoomLevelLabel');
             if (label) label.textContent = `${Math.round(currentGraphZoom * 100)}%`;
         }
@@ -1360,12 +1479,16 @@
         // Returns null if either element is missing or has no measurable size.
         function measureGraphAndViewport() {
             const wrapper = document.getElementById('graph-zoom-wrapper');
+            const graph = document.getElementById('graph-container');
             const viewport = document.getElementById('viewport');
-            if (!wrapper || !viewport) return null;
+            if (!wrapper || !graph || !viewport) return null;
 
-            wrapper.style.transform = 'scale(1)'; // measure at natural (unscaled) size first
-            const naturalWidth = wrapper.scrollWidth;
-            const naturalHeight = wrapper.scrollHeight;
+            // Read the graph's unscaled dimensions from its current rendered bounds.
+            // Do not reset `zoom` here: resetting an SVG foreignObject while Mermaid is
+            // updating after a removed course can cause its label to reflow incorrectly.
+            const graphBounds = graph.getBoundingClientRect();
+            const naturalWidth = graphBounds.width / currentGraphZoom;
+            const naturalHeight = graphBounds.height / currentGraphZoom;
             const availableWidth = viewport.clientWidth - 56;   // 56px = breathing room on each side
             const availableHeight = viewport.clientHeight - 56;
 
@@ -1375,16 +1498,18 @@
             return { wrapper, viewport, naturalWidth, naturalHeight, availableWidth, availableHeight };
         }
 
-        // ANTI-CLUTTER (Root-Top): measures the graph's real rendered size against the
-        // visible viewport and scales it down (never up past 100%) so it opens fully in
-        // view instead of requiring the student to manually zoom out and scroll around -
-        // this is what makes a 60-course major usable on a phone screen.
+        // ROOT-TOP FIT: prefer readable course labels over squeezing an entire large
+        // program onto one screen. Charts that need more reduction than this floor stay
+        // at a usable size; students can use the built-in pan/scroll controls to explore
+        // the outer courses.
+        const FULL_GRAPH_READABLE_ZOOM = 0.58;
+
         function fitFullGraphToViewport() {
             const m = measureGraphAndViewport();
             if (!m) { applyGraphZoom(); return; }
 
             const fitScale = Math.min(m.availableWidth / m.naturalWidth, m.availableHeight / m.naturalHeight, 1);
-            currentGraphZoom = Math.max(ZOOM_MIN, +fitScale.toFixed(2));
+            currentGraphZoom = Math.max(ZOOM_MIN, FULL_GRAPH_READABLE_ZOOM, +fitScale.toFixed(2));
             applyGraphZoom();
             m.viewport.scrollTop = 0;
             m.viewport.scrollLeft = 0;
@@ -1427,6 +1552,17 @@
                 fitFullGraphToViewport();
             }
         }
+
+        // Refit an open graph after the available screen area changes. Debouncing
+        // avoids repeated recalculation while a user is dragging a window edge.
+        let resizeFitTimer;
+        window.addEventListener('resize', () => {
+            syncAppLayoutOffset();
+            clearTimeout(resizeFitTimer);
+            resizeFitTimer = setTimeout(() => {
+                if (currentSelectionMode !== 'HOME') fitGraphToViewport();
+            }, 120);
+        });
 
         document.getElementById('zoomInBtn').addEventListener('click', () => {
             currentGraphZoom = Math.min(ZOOM_MAX, +(currentGraphZoom + ZOOM_STEP).toFixed(2));
@@ -1510,6 +1646,7 @@
 
         // RECOMMENDER wiring
         document.getElementById('recommendBtn').addEventListener('click', showRecommendationPanel);
+        document.getElementById('buildDegreePlanBtn').addEventListener('click', buildDegreePlan);
         document.getElementById('closeRecommendBtn').addEventListener('click', hideRecommendationPanel);
         document.getElementById('recommendOverlay').addEventListener('click', (e) => {
             // Clicking the dimmed backdrop (not the modal itself) closes the panel
@@ -1522,7 +1659,7 @@
         document.getElementById('darkModeBtn').addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
-            document.getElementById('darkModeBtn').textContent = isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+            document.getElementById('darkModeBtn').textContent = isDark ? 'Light Mode' : 'Dark Mode';
         });
 
         document.getElementById('toggleMenuBtn').addEventListener('click', () => {

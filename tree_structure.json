@@ -369,24 +369,6 @@
             "availability": [],
             "stub": true
         },
-        "MATH_098": {
-            "name": "Algebra Review I",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "MATH_099": {
-            "name": "",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
-        "MATH_100": {
-            "name": "College Algebra",
-            "prerequisites": [],
-            "availability": [],
-            "stub": true
-        },
         "MATH_120": {
             "name": "Pre-Calculus Mathematics",
             "prerequisites": [],
@@ -4283,23 +4265,15 @@
             "prerequisites": [
                 {
                     "id": "MATH_120",
-                    "type": "alternative_dotted"
-                },
-                {
-                    "id": "ECMG_212",
-                    "type": "required"
+                    "type": "required_dotted"
                 },
                 {
                     "id": "MATH_112",
-                    "type": "alternative_dotted"
+                    "type": "required_dotted"
                 },
                 {
                     "id": "MATH_213",
                     "type": "required"
-                },
-                {
-                    "id": "PSY_211",
-                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -4320,18 +4294,6 @@
                 {
                     "id": "MATH_112",
                     "type": "required"
-                },
-                {
-                    "id": "ECMG_212",
-                    "type": "required"
-                },
-                {
-                    "id": "PSY_211",
-                    "type": "required"
-                },
-                {
-                    "id": "SOC_261",
-                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -5510,18 +5472,6 @@
                 "Spring Semester"
             ],
             "prerequisites": [
-                {
-                    "id": "MATH_098",
-                    "type": "required"
-                },
-                {
-                    "id": "MATH_099",
-                    "type": "required"
-                },
-                {
-                    "id": "MATH_100",
-                    "type": "alternative_dotted"
-                }
             ]
         },
         "PSCI_210": {

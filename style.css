@@ -59,7 +59,7 @@
     height: 100%;
     overflow: auto; 
     background: #f8fafc; 
-    padding: 24px;
+    padding: clamp(12px, 2vw, 24px);
     -webkit-overflow-scrolling: touch;
     cursor: grab;
 }
@@ -359,7 +359,7 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
 #graph-container {
     min-width: max-content;
     min-height: max-content;
-    padding: 40px;
+    padding: clamp(20px, 4vw, 40px);
 }
 
 .mermaid {
@@ -614,6 +614,76 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
     color: #b8860b;
 }
 
+.degree-plan-launcher {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.degree-plan-launcher h4,
+.degree-plan-results h3,
+.degree-plan-term h4 { color: #003366; font-weight: 800; }
+
+.degree-plan-launcher p,
+.degree-plan-term p,
+.degree-plan-note { color: #64748b; font-size: 13px; line-height: 1.4; margin-top: 4px; }
+
+.degree-plan-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.degree-plan-actions label { color: #003366; font-size: 12px; font-weight: 700; }
+
+.degree-plan-actions select {
+    padding: 7px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #334155;
+    background: #fff;
+}
+
+.degree-plan-btn {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    background: #003366;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.degree-plan-btn:hover { background: #002244; }
+.degree-plan-results { margin-top: 20px; }
+.degree-plan-results > h3 { margin-bottom: 10px; }
+
+.degree-plan-term {
+    margin-top: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.degree-plan-term p { margin-bottom: 8px; }
+.degree-plan-term ul { list-style: none; }
+
+.degree-plan-term li {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 7px 0;
+    border-top: 1px solid #e2e8f0;
+    color: #003366;
+    font-size: 13px;
+}
+
+.degree-plan-term li span { color: #64748b; font-size: 12px; }
+
 /* 7. ZOOM CONTROLS FOR LARGE / CLUTTERED DEPENDENCY TREES */
 .zoom-controls {
     position: absolute;
@@ -765,14 +835,6 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
         bottom: 12px;
     }
 
-    /* Bump node text up further on small screens so labels stay readable
-       even when a major's tree has many closely-packed courses. */
-    .node:not(.selected-node):not(.prereqs-met) text,
-    .node.prereqs-met:not(.selected-node) text,
-    .node.selected-node text {
-        font-size: 17px !important;
-    }
-
     .complaint-panel {
         max-width: 100%;
         margin: 20px 12px;
@@ -915,6 +977,30 @@ body.dark-mode .recommend-card-title {
 }
 body.dark-mode .recommend-card-name { 
     color: #ffffff !important; 
+}
+body.dark-mode .degree-plan-term {
+    background: #2a2a2a !important;
+    border-color: #444 !important;
+}
+body.dark-mode .degree-plan-launcher {
+    border-color: #444 !important;
+}
+body.dark-mode .degree-plan-launcher h4,
+body.dark-mode .degree-plan-results h3,
+body.dark-mode .degree-plan-term h4,
+body.dark-mode .degree-plan-term li {
+    color: #ffffff !important;
+}
+body.dark-mode .degree-plan-launcher p,
+body.dark-mode .degree-plan-term p,
+body.dark-mode .degree-plan-term li span,
+body.dark-mode .degree-plan-note {
+    color: #cbd5e1 !important;
+}
+body.dark-mode .degree-plan-actions select {
+    background: #333 !important;
+    color: #ffffff !important;
+    border-color: #555 !important;
 }
 body.dark-mode .recommend-modal-header h3 { 
     color: #ffffff !important; 
