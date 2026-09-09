@@ -179,7 +179,7 @@ body.dark-mode .node.selected-node .radial-node-label { color: #4ade80; }
 body.dark-mode .radial-arrow-head { fill: #475569; }
 body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
 
-/* Dropdown Filter & Progress Bar Control Panel Styling */
+/* Dropdown filter and control panel styling */
 .controls-panel {
     position: fixed;
     top: 80px; /* fallback; refined at runtime by JS to sit just under the header */
@@ -324,43 +324,38 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
     color: #003366;
 }
 
-/* 5. TOP RIGHT PROGRESS BAR ENGINE DESIGN */
-.top-progress-container {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 340px;
-}
-
-.progress-bar-bg {
-    flex: 1;
-    height: 10px;
-    background: #e2e8f0;
-    border-radius: 6px;
-    overflow: hidden;
-}
-
-.progress-bar-fill {
-    height: 100%;
-    background: #27ae60;
-    transition: width 0.3s ease-in-out;
-    border-radius: 6px;
-}
-
-.progress-text {
-    font-size: 13px;
-    font-weight: 700;
-    color: #003366; 
-    white-space: nowrap;
-    min-width: 110px;
-    text-align: right;
-}
-
 #graph-container {
     min-width: max-content;
     min-height: max-content;
     padding: clamp(20px, 4vw, 40px);
 }
+
+#graph-container.home-view {
+    min-width: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+}
+
+.home-welcome {
+    width: 100%;
+    margin: 12vh auto 0;
+    color: #666666;
+    text-align: center;
+}
+
+.home-welcome h2 {
+    margin: 0 0 10px;
+    color: #003366;
+    font-size: 28px;
+}
+
+.home-welcome p {
+    margin: 0;
+    font-size: 16px;
+}
+
+body.dark-mode .home-welcome { color: #cbd5e1; }
+body.dark-mode .home-welcome h2 { color: #ffffff; }
 
 .mermaid {
     min-width: max-content;
@@ -520,6 +515,20 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
     background-color: #1e8449;
 }
 
+.manual-plan-home-btn {
+    margin-top: 22px;
+    border: none;
+    border-radius: 7px;
+    padding: 12px 18px;
+    background: #003366;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.manual-plan-home-btn:hover { background: #002244; }
+
 .recommend-overlay {
     position: fixed;
     inset: 0;
@@ -613,6 +622,95 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
     background: #fdf3d8;
     color: #b8860b;
 }
+
+.planner-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.planner-modal {
+    background: #ffffff;
+    border-radius: 10px;
+    max-width: 1000px;
+    width: 100%;
+    max-height: 86vh;
+    overflow-y: auto;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+
+.planner-settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 10px 0 18px;
+}
+
+.planner-settings label, .planner-catalog > label {
+    color: #003366;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.planner-settings select, .planner-catalog input {
+    margin-left: 5px;
+    padding: 7px 9px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #334155;
+}
+
+.planner-workspace { display: grid; grid-template-columns: minmax(230px, 0.8fr) minmax(0, 2fr); gap: 20px; }
+.planner-catalog { min-width: 0; }
+.planner-catalog input { box-sizing: border-box; width: 100%; margin: 8px 0 10px; }
+.planner-course-results { max-height: 54vh; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+.planner-course-results p { padding: 12px; color: #64748b; font-size: 13px; }
+
+.planner-search-result {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    gap: 3px;
+    text-align: left;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fff;
+    color: #003366;
+    cursor: pointer;
+}
+
+.planner-search-result:hover { background: #f1f5f9; }
+.planner-search-result span { color: #64748b; font-size: 12px; }
+.planner-terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.planner-term { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc; }
+.planner-term h4 { color: #003366; margin-bottom: 10px; }
+.planner-slots { display: flex; flex-direction: column; gap: 7px; }
+
+.planner-slot {
+    width: 100%;
+    min-height: 48px;
+    border: 1px dashed #94a3b8;
+    border-radius: 6px;
+    background: #fff;
+    color: #64748b;
+    cursor: pointer;
+    text-align: left;
+    padding: 8px;
+}
+
+.planner-slot:hover, .planner-slot-selected { border-color: #003366; box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.12); }
+.planner-filled { display: flex; align-items: stretch; padding: 0; border-style: solid; overflow: hidden; }
+.planner-course-chip { display: flex; flex: 1; flex-direction: column; gap: 3px; border: 0; background: transparent; color: #003366; text-align: left; cursor: pointer; padding: 8px; }
+.planner-course-chip span { color: #64748b; font-size: 11px; }
+.planner-remove-course { border: 0; border-left: 1px solid #e2e8f0; background: transparent; color: #b91c1c; font-size: 20px; cursor: pointer; padding: 0 10px; }
 
 .degree-plan-launcher {
     margin-top: 20px;
@@ -817,9 +915,17 @@ body.dark-mode .edgePath.root-spoke path { stroke: #64748b !important; }
         max-width: 100%;
     }
 
-    .top-progress-container {
-        min-width: 0;
-        width: 100%;
+    .planner-modal {
+        max-width: 100%;
+        padding: 18px;
+    }
+
+    .planner-workspace {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-course-results {
+        max-height: 220px;
     }
 
     .viewport {
@@ -1005,6 +1111,38 @@ body.dark-mode .degree-plan-actions select {
 body.dark-mode .recommend-modal-header h3 { 
     color: #ffffff !important; 
 }
+body.dark-mode .planner-modal,
+body.dark-mode .planner-term,
+body.dark-mode .planner-slot,
+body.dark-mode .planner-search-result {
+    background: #2a2a2a !important;
+    border-color: #444 !important;
+}
+body.dark-mode .planner-settings label,
+body.dark-mode .planner-catalog > label,
+body.dark-mode .planner-term h4,
+body.dark-mode .planner-search-result,
+body.dark-mode .planner-course-chip {
+    color: #ffffff !important;
+}
+body.dark-mode .planner-search-result:hover {
+    background: #333 !important;
+}
+body.dark-mode .planner-settings select,
+body.dark-mode .planner-catalog input {
+    background: #333 !important;
+    color: #ffffff !important;
+    border-color: #555 !important;
+}
+body.dark-mode .planner-course-results,
+body.dark-mode .planner-remove-course {
+    border-color: #555 !important;
+}
+body.dark-mode .planner-course-chip span,
+body.dark-mode .planner-search-result span,
+body.dark-mode .planner-course-results p {
+    color: #cbd5e1 !important;
+}
 body.dark-mode .recommend-modal-subtitle { 
     color: #ffffff !important; 
 }
@@ -1049,13 +1187,6 @@ body.dark-mode .action-btn {
 }
 body.dark-mode .action-btn:hover { 
     background-color: #444; 
-}
-
-body.dark-mode .progress-bar-bg { 
-    background: #444 !important; 
-}
-body.dark-mode .progress-text { 
-    color: #ffffff !important; 
 }
 
 body.dark-mode .clear-selection-btn { 
