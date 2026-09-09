@@ -807,6 +807,23 @@
                 try {
                     container.innerHTML = `<div class="mermaid" id="graph-engine">${graphDefinition}</div>`;
                     const element = document.getElementById('graph-engine');
+
+                    // ZOOM-SAFE RE-RENDER: Mermaid's htmlLabels mode sizes every node box
+                    // from the *rendered* pixel size of its label div. CSS `zoom` on our
+                    // ancestor (#graph-zoom-wrapper) changes what "rendered pixel size"
+                    // means, so if the wrapper is still zoomed from an earlier fit/manual
+                    // zoom when mermaid.run() executes, Mermaid measures a distorted label
+                    // size and bakes it into the new SVG's node boxes - and that already-
+                    // skewed SVG then gets zoomed again on top, garbling/squishing the text.
+                    // Selecting a major avoids this because resetGraphZoom() already zeroes
+                    // the wrapper before this function ever runs; Clear/transcript-import/
+                    // layout-switch called mermaid.run() without that reset. Force zoom to
+                    // 1 for the measurement/render, then restore (or fit) it afterward.
+                    const zoomToRestore = currentGraphZoom;
+                    const wrapperEl = document.getElementById('graph-zoom-wrapper');
+                    currentGraphZoom = 1; // keep the state variable in sync with the DOM below,
+                    if (wrapperEl) wrapperEl.style.zoom = '1'; // so fitFullGraphToViewport's math stays correct
+
                     await mermaid.run({ nodes: [element] });
                     applyGraphState(); // Restore styling to surviving nodes
                     applyDualMajorHighlighting(); // DOUBLE MAJOR: outline courses shared by both majors
@@ -816,6 +833,12 @@
                     if (pendingAutoFitZoom) {
                         pendingAutoFitZoom = false;
                         fitFullGraphToViewport();
+                    } else {
+                        // Not a fresh-fit case (Clear, transcript import, layout redraw at the
+                        // same layout) - put the user's previous zoom level back now that the
+                        // diagram has been correctly measured/laid out at true 100%.
+                        currentGraphZoom = zoomToRestore;
+                        applyGraphZoom();
                     }
                 } catch (renderError) {
                     console.error("Mermaid Render Error:", renderError);
