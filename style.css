@@ -672,6 +672,14 @@ body.dark-mode .home-welcome h2 { color: #ffffff; }
 .planner-catalog input { box-sizing: border-box; width: 100%; margin: 8px 0 10px; }
 .planner-course-results { max-height: 54vh; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
 .planner-course-results p { padding: 12px; color: #64748b; font-size: 13px; }
+.planner-course-results p.planner-term-note {
+    padding: 8px 12px;
+    margin: 0;
+    background: #eef4fb;
+    color: #003366;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+}
 
 .planner-search-result {
     display: flex;
@@ -1142,6 +1150,11 @@ body.dark-mode .planner-course-chip span,
 body.dark-mode .planner-search-result span,
 body.dark-mode .planner-course-results p {
     color: #cbd5e1 !important;
+}
+body.dark-mode .planner-course-results p.planner-term-note {
+    background: #22344a !important;
+    color: #ffffff !important;
+    border-color: #444 !important;
 }
 body.dark-mode .recommend-modal-subtitle { 
     color: #ffffff !important; 

@@ -1233,17 +1233,18 @@
         }
 
         // Parses one entry of a course's "availability" array, e.g. "Fall Semester(Even)",
-        // "Spring Semester", or "Even Years", into a structured {semester, parity} shape.
+        // "Spring Semester", "Even Years", or "Every 3 Years(Spring)", into a structured
+        // {semester, parity} shape. Looks for the season/parity words anywhere in the
+        // entry rather than requiring a fixed "Season Semester(Parity)" shape, so formats
+        // like "Every 3 Years(Spring)" still have their Spring-only restriction honored
+        // instead of silently being treated as available every semester.
         function parseAvailabilityEntry(entry) {
-            const semesterMatch = entry.match(/(Fall|Spring|Summer)\s*Semester(?:\((Even|Odd)\))?/i);
-            if (semesterMatch) {
-                return { semester: semesterMatch[1], parity: semesterMatch[2] || null };
-            }
-            const yearOnlyMatch = entry.match(/(Even|Odd)\s*Years?/i);
-            if (yearOnlyMatch) {
-                return { semester: null, parity: yearOnlyMatch[1] };
-            }
-            return { semester: null, parity: null };
+            const semesterMatch = entry.match(/(Fall|Spring|Summer)/i);
+            const parityMatch = entry.match(/(Even|Odd)/i);
+            return {
+                semester: semesterMatch ? semesterMatch[1] : null,
+                parity: parityMatch ? parityMatch[1] : null
+            };
         }
 
         // The quick recommender always plans for one upcoming academic term, never the
@@ -1371,6 +1372,40 @@
             return { semester: document.getElementById('plannerStartTerm').value, year: term.year };
         }
 
+        // Builds the full { semester, year, parity } term for every slot-row in the
+        // manual plan, in order, so the catalog search can know exactly which term
+        // it's filtering for. This mirrors the term-advancing logic in renderManualPlan
+        // so the two stay in sync.
+        function computeManualPlanTerms() {
+            const terms = [];
+            let term = getManualPlanStartTerm();
+            for (let i = 0; i < manualPlan.length; i++) {
+                const parity = (term.year % 2 === 0) ? 'Even' : 'Odd';
+                terms.push({ semester: term.semester, year: term.year, parity });
+                term = getNextAcademicTerm({ ...term, parity });
+            }
+            return terms;
+        }
+
+        // Figures out which slot a newly-added course would land in: the selected
+        // slot if it's still empty, otherwise the first empty slot in the plan.
+        // Returns null when every slot is already filled.
+        function findManualPlanTargetSlot() {
+            if (selectedPlanSlot) {
+                const [termIndex, slotIndex] = selectedPlanSlot.split('-').map(Number);
+                if (manualPlan[termIndex] && !manualPlan[termIndex][slotIndex]) {
+                    return [termIndex, slotIndex];
+                }
+            }
+            let target = null;
+            manualPlan.some((term, termIndex) => term.some((course, slotIndex) => {
+                if (course || target) return false;
+                target = [termIndex, slotIndex];
+                return true;
+            }));
+            return target;
+        }
+
         function resetManualPlan() {
             const termCount = Number(document.getElementById('plannerTermCount').value);
             const coursesPerTerm = Number(document.getElementById('plannerCoursesPerTerm').value);
@@ -1384,10 +1419,10 @@
 
         function renderManualPlan() {
             const termsContainer = document.getElementById('plannerTerms');
-            let term = getManualPlanStartTerm();
+            const terms = computeManualPlanTerms();
             termsContainer.innerHTML = manualPlan.map((courses, termIndex) => {
+                const term = terms[termIndex];
                 const title = `${term.semester} ${term.year}`;
-                term = getNextAcademicTerm({ ...term, parity: term.year % 2 === 0 ? 'Even' : 'Odd' });
                 const slots = courses.map((courseKey, slotIndex) => {
                     const slotId = `${termIndex}-${slotIndex}`;
                     const isSelected = selectedPlanSlot === slotId;
@@ -1399,20 +1434,48 @@
             }).join('');
         }
 
+        // Course codes are stored with underscores (e.g. "AFEN_265") but displayed with
+        // spaces ("AFEN 265"). Treat underscores, hyphens, and repeated whitespace as
+        // interchangeable so a search for "afen 265" (or "afen-265") still matches,
+        // instead of requiring the raw underscore the data happens to use internally.
+        function normalizePlannerSearchText(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/[_-]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
         function renderPlannerSearch() {
             const results = document.getElementById('plannerCourseResults');
-            const search = document.getElementById('plannerCourseSearch').value.trim().toLowerCase();
+            const search = normalizePlannerSearchText(document.getElementById('plannerCourseSearch').value);
             const selectedCourses = new Set(manualPlan.flat().filter(Boolean));
+
+            // Which slot/term is a new course actually headed for right now? Only
+            // courses that run in THAT term should show up in the catalog - a Fall
+            // slot should never offer a Spring-only class, and a course that only
+            // runs in odd/even years should only appear when the parity matches.
+            const target = findManualPlanTargetSlot();
+            if (!target) {
+                results.innerHTML = '<p>Your plan is full - remove a course to add another.</p>';
+                return;
+            }
+            const term = computeManualPlanTerms()[target[0]];
+            const termLabel = `${term.semester} ${term.year}`;
+
             if (!search) {
-                results.innerHTML = '<p>Search by course code or title to browse the catalog.</p>';
+                results.innerHTML = `<p>Search by course code or title to browse classes offered in ${escapePlannerHtml(termLabel)}.</p>`;
                 return;
             }
             const matches = Object.entries(cachedData.courses || {}).filter(([courseKey, meta]) =>
-                !selectedCourses.has(courseKey) && `${courseKey} ${meta.name || ''}`.toLowerCase().includes(search)
+                !selectedCourses.has(courseKey) &&
+                normalizePlannerSearchText(`${courseKey} ${meta.name || ''}`).includes(search) &&
+                isCourseAvailableForPlan(meta, term)
             ).slice(0, 30);
-            results.innerHTML = matches.length ? matches.map(([courseKey, meta]) =>
+            const note = `<p class="planner-term-note">Showing classes offered in ${escapePlannerHtml(termLabel)}.</p>`;
+            results.innerHTML = note + (matches.length ? matches.map(([courseKey, meta]) =>
                 `<button class="planner-search-result" data-course="${escapePlannerHtml(courseKey)}"><strong>${escapePlannerHtml(formatCourseLabel(courseKey))}</strong><span>${escapePlannerHtml(meta.name || 'Course')}</span></button>`
-            ).join('') : '<p>No unselected courses matched that search.</p>';
+            ).join('') : `<p>No unselected courses matched that search and run in ${escapePlannerHtml(termLabel)}.</p>`);
         }
 
         function openManualPlanner() {
@@ -1432,16 +1495,14 @@
 
         function addCourseToManualPlan(courseKey) {
             if (manualPlan.some(term => term.includes(courseKey))) return;
-            let target = selectedPlanSlot ? selectedPlanSlot.split('-').map(Number) : null;
-            if (!target || manualPlan[target[0]][target[1]]) {
-                target = null;
-                manualPlan.some((term, termIndex) => term.some((course, slotIndex) => {
-                    if (course || target) return false;
-                    target = [termIndex, slotIndex];
-                    return true;
-                }));
-            }
+            const target = findManualPlanTargetSlot();
             if (!target) return;
+            // Defensive re-check: the catalog is already filtered to courses that run
+            // in the target slot's term, but re-verify here in case the plan changed
+            // out from under a stale button (e.g. settings changed between render and click).
+            const term = computeManualPlanTerms()[target[0]];
+            const meta = (cachedData.courses || {})[courseKey] || {};
+            if (!isCourseAvailableForPlan(meta, term)) return;
             manualPlan[target[0]][target[1]] = courseKey;
             selectedPlanSlot = `${target[0]}-${target[1]}`;
             renderManualPlan();
@@ -1772,6 +1833,7 @@
             document.getElementById(id).addEventListener('change', () => {
                 resetManualPlan();
                 renderManualPlan();
+                renderPlannerSearch();
             });
         });
         document.getElementById('plannerCourseResults').addEventListener('click', (e) => {
