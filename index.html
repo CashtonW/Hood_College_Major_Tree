@@ -1309,7 +1309,7 @@
 
         // Builds the ranked recommendation list from the currently displayed graph.
         function computeRecommendations() {
-            const term = getCurrentTermInfo();
+            const term = getUpcomingAcademicTerm();
             const candidates = [];
 
             Object.keys(currentCourseMeta).forEach(courseKey => {
