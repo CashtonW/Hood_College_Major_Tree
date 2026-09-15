@@ -121,6 +121,45 @@
     stroke-width: 4px !important; 
 }
 
+/* 4a. NO-RELATIVES GROUP (Root-Top layout)
+   Standalone courses (no prerequisites, and not a prerequisite for anything else on
+   screen) are grouped into one Mermaid subgraph labeled "No Prerequisites (n)" so
+   they read as a deliberate, separate collection rather than being scattered through
+   the dependency tree. The group itself gets a light dashed boundary + label; the
+   internal row subgraphs used purely to arrange them into a compact grid stay
+   invisible (see the zzIsoRowStyle classDef in the script, which already sets their
+   fill/stroke to transparent - these rules just cover the outer group's box + label
+   and make sure it reads clearly in both light and dark mode). */
+.cluster rect {
+    fill: transparent;
+    stroke: #94a3b8 !important;
+    stroke-width: 1.5px !important;
+    stroke-dasharray: 5 4;
+}
+.cluster .cluster-label,
+.cluster-label {
+    color: #64748b;
+}
+.cluster .cluster-label span,
+.cluster .cluster-label div,
+.cluster-label span,
+.cluster-label div,
+.cluster-label foreignObject div {
+    color: #64748b !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+}
+body.dark-mode .cluster rect {
+    stroke: #64748b !important;
+}
+body.dark-mode .cluster .cluster-label span,
+body.dark-mode .cluster .cluster-label div,
+body.dark-mode .cluster-label span,
+body.dark-mode .cluster-label div,
+body.dark-mode .cluster-label foreignObject div {
+    color: #cbd5e1 !important;
+}
+
 /* 4b. ROOT-CENTER (RADIAL) LAYOUT
    The radial renderer draws its own `.node`/`.edgePath` groups (not Mermaid's), so it
    reuses every rule above for fill/stroke - these rules cover the parts unique to
@@ -146,6 +185,30 @@
 
 .radial-arrow-head { fill: #cbd5e1; }
 .edgePath.root-spoke path { stroke: #94a3b8 !important; stroke-width: 2.5px !important; }
+
+/* NO-RELATIVES RING (Root-Center layout): a faint dashed guide circle + label marks
+   the halo of standalone courses as a deliberate group, mirroring the dashed box
+   used for the same group in Root-Top. Their node boxes get a dashed outline too so
+   they read as "no relatives" at a glance wherever they land in the ring. */
+.radial-iso-ring {
+    stroke: #94a3b8;
+    stroke-width: 1.5px;
+    stroke-dasharray: 6 5;
+    opacity: 0.6;
+}
+.radial-iso-ring-label {
+    width: 100%;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+    pointer-events: none;
+}
+.node.isolated-node:not(.selected-node):not(.prereqs-met) rect {
+    stroke-dasharray: 5 4 !important;
+}
+body.dark-mode .radial-iso-ring { stroke: #64748b; }
+body.dark-mode .radial-iso-ring-label { color: #94a3b8; }
 
 /* Cross-links are prerequisites that fall outside a course's own branch of the primary
    tree - kept visually secondary (lighter, thinner) so the main branch structure reads

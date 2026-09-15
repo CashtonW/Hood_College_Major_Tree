@@ -2502,7 +2502,7 @@
             "prerequisites": [
                 {
                     "id": "MATH_099",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 },
                 {
                     "id": "MATH_100",
@@ -4265,15 +4265,15 @@
             "prerequisites": [
                 {
                     "id": "MATH_120",
-                    "type": "required_dotted"
+                    "type": "alternative_dotted"
                 },
                 {
                     "id": "MATH_112",
-                    "type": "required_dotted"
+                    "type": "alternative_dotted"
                 },
                 {
                     "id": "MATH_213",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -4289,11 +4289,11 @@
                 },
                 {
                     "id": "MATH_213",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 },
                 {
                     "id": "MATH_112",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 }
             ]
         },
@@ -4343,11 +4343,11 @@
             "prerequisites": [
                 {
                     "id": "MATH_112",
-                    "type": "required"
+                    "type": "alternative_dotted"
                 },
                 {
                     "id": "MATH_202",
-                    "type": "alternative_dotted"
+                    "type": "required"
                 }
             ]
         },

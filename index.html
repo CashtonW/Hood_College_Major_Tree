@@ -682,6 +682,24 @@
                 return primaryName;
             }
 
+            // NO-RELATIVES DETECTION: a course counts as "no relatives" only within the
+            // graph currently on screen - it has no prerequisite of its own AND nothing
+            // else being drawn lists it as a prerequisite either. Both layouts use this so
+            // a standalone elective is identified and grouped the same way everywhere.
+            // If literally every course on screen qualifies (a major with no prerequisite
+            // chains at all), grouping would just relabel the whole chart, so callers
+            // treat that case as "nothing to group" and fall back to the plain layout.
+            function computeIsolatedNodes(ids) {
+                const hasPrereqHere = new Set();
+                const isPrereqForSomeone = new Set();
+                ids.forEach(id => {
+                    const prereqs = (currentDependencyMap[id] || []).filter(p => ids.includes(p));
+                    if (prereqs.length > 0) hasPrereqHere.add(id);
+                    prereqs.forEach(p => isPrereqForSomeone.add(p));
+                });
+                return ids.filter(id => !hasPrereqHere.has(id) && !isPrereqForSomeone.has(id));
+            }
+
             // RE-RENDER ENGINE: Wipes and redraws the layout based strictly on data state.
             // Dispatches to whichever layout the "Layout" dropdown currently has selected -
             // 'root-top' keeps the original Mermaid top-down tree; 'root-center' draws the
@@ -706,16 +724,38 @@
 
             // ROOT-TOP LAYOUT: the original top-down Mermaid flowchart rendering.
             async function renderMermaidLayout(nodesToDraw) {
+                // NO-RELATIVES GROUPING: pull out standalone courses (no prerequisites of
+                // their own, and nobody else's prerequisite either) so they can be given
+                // their own compact, clearly-labeled spot instead of being threaded one at
+                // a time into the same invisible chain as every real dependency branch -
+                // that used to add one extra vertical rank per standalone course, which is
+                // exactly what made big elective-heavy majors sprawl tall and made a random
+                // elective look like it belonged between two unrelated real branches.
+                const rawIsolated = computeIsolatedNodes(nodesToDraw);
+                const isolatedIds = (rawIsolated.length > 0 && rawIsolated.length < nodesToDraw.length)
+                    ? rawIsolated.slice().sort((a, b) => formatCourseLabel(a).localeCompare(formatCourseLabel(b)))
+                    : [];
+                const isolatedSet = new Set(isolatedIds);
+                const treeIds = nodesToDraw.filter(id => !isolatedSet.has(id));
+
                 // ANTI-CLUTTER: majors with many courses/branches used to render at the same
                 // fixed spacing as a 5-course major, producing huge sprawling trees that force
                 // heavy scrolling (especially on mobile). Spacing now tightens as node count grows.
-                const nodeCount = nodesToDraw.length;
+                // This is based on the size of the actual dependency tree (not the standalone
+                // group above), since that's the part that genuinely needs the breathing room -
+                // a small tree with a long tail of unrelated electives no longer gets squeezed
+                // down to fit a much bigger number that isn't representative of its own shape.
+                const nodeCount = treeIds.length;
                 let rankSpacing = 140, nodeSpacing = 70;
-                if (nodeCount > 45) { rankSpacing = 85; nodeSpacing = 34; }
-                else if (nodeCount > 25) { rankSpacing = 105; nodeSpacing = 46; }
-                else if (nodeCount > 15) { rankSpacing = 120; nodeSpacing = 58; }
+                if (nodeCount > 45) { rankSpacing = 95; nodeSpacing = 40; }
+                else if (nodeCount > 25) { rankSpacing = 110; nodeSpacing = 50; }
+                else if (nodeCount > 15) { rankSpacing = 125; nodeSpacing = 60; }
 
                 let graphDefinition = `%%{init: {"flowchart": {"rankSpacing": ${rankSpacing}, "nodeSpacing": ${nodeSpacing}}}}%%\ngraph TD;\n`;
+                // Styling for the standalone "No Prerequisites" group below - declared up
+                // front since Mermaid resolves classDef definitions before use.
+                graphDefinition += `  classDef zzIsoGroupStyle fill:transparent,stroke:#94a3b8,stroke-width:1.5px,stroke-dasharray:5 4;\n`;
+                graphDefinition += `  classDef zzIsoRowStyle fill:transparent,stroke:transparent;\n`;
 
                 // Build the syntax string. Every node/edge id passed to Mermaid goes through
                 //    sanitizeMermaidId() first - this is the fix for the crash that used to happen
@@ -745,11 +785,13 @@
                 // separate course clusters beside the main tree. We add invisible layout
                 // links between components so those groups are stacked underneath instead.
                 // These are positioning-only links: they create no displayed prerequisite.
-                const nodeSet = new Set(nodesToDraw);
-                const neighbors = new Map(nodesToDraw.map(id => [id, new Set()]));
-                nodesToDraw.forEach(childId => {
+                // Standalone (no-relatives) courses are handled separately below, so this
+                // only has to chain together the remaining real, multi-course branches.
+                const treeSet = new Set(treeIds);
+                const neighbors = new Map(treeIds.map(id => [id, new Set()]));
+                treeIds.forEach(childId => {
                     (currentDependencyMap[childId] || []).forEach(parentId => {
-                        if (!nodeSet.has(parentId)) return;
+                        if (!treeSet.has(parentId)) return;
                         neighbors.get(childId).add(parentId);
                         neighbors.get(parentId).add(childId);
                     });
@@ -757,7 +799,7 @@
 
                 const seenNodes = new Set();
                 const components = [];
-                nodesToDraw.forEach(startId => {
+                treeIds.forEach(startId => {
                     if (seenNodes.has(startId)) return;
                     const component = [];
                     const pending = [startId];
@@ -775,27 +817,69 @@
                     components.push(component);
                 });
 
-                if (components.length > 1) {
-                    components.sort((a, b) => b.length - a.length);
-                    const findComponentStart = component => {
-                        const componentSet = new Set(component);
-                        return component.find(id =>
-                            !(currentDependencyMap[id] || []).some(parentId => componentSet.has(parentId))
-                        ) || component[0];
-                    };
-                    const findComponentEnd = component => {
-                        const componentSet = new Set(component);
-                        return component.find(id => !Object.keys(currentDependencyMap).some(childId =>
-                            componentSet.has(childId) && (currentDependencyMap[childId] || []).includes(id)
-                        )) || component[0];
-                    };
+                const findComponentStart = component => {
+                    const componentSet = new Set(component);
+                    return component.find(id =>
+                        !(currentDependencyMap[id] || []).some(parentId => componentSet.has(parentId))
+                    ) || component[0];
+                };
+                const findComponentEnd = component => {
+                    const componentSet = new Set(component);
+                    return component.find(id => !Object.keys(currentDependencyMap).some(childId =>
+                        componentSet.has(childId) && (currentDependencyMap[childId] || []).includes(id)
+                    )) || component[0];
+                };
 
+                let lastTreeAnchor = null;
+                if (components.length > 0) {
+                    components.sort((a, b) => b.length - a.length);
                     let previousAnchor = findComponentEnd(components[0]);
                     components.slice(1).forEach(component => {
                         const nextAnchor = findComponentStart(component);
                         graphDefinition += `  ${sanitizeMermaidId(previousAnchor)} ~~~ ${sanitizeMermaidId(nextAnchor)};\n`;
                         previousAnchor = nextAnchor;
                     });
+                    lastTreeAnchor = previousAnchor;
+                }
+
+                // NO-RELATIVES GROUP: render every standalone course together inside one
+                // clearly-labeled box, arranged in short rows (instead of one long column)
+                // so a long list of electives stays compact and easy to scan. Only a single
+                // invisible link ties the group to the rest of the chart, rather than one
+                // per standalone course.
+                if (isolatedIds.length > 0) {
+                    const ISO_ROW_SIZE = 6;
+                    const isoRows = [];
+                    for (let i = 0; i < isolatedIds.length; i += ISO_ROW_SIZE) {
+                        isoRows.push(isolatedIds.slice(i, i + ISO_ROW_SIZE));
+                    }
+                    const groupLabel = isolatedIds.length === 1
+                        ? 'No Prerequisites'
+                        : `No Prerequisites (${isolatedIds.length})`;
+
+                    graphDefinition += `  subgraph zzIsoGroup["${groupLabel}"]\n`;
+                    graphDefinition += `  direction TB\n`;
+                    let previousRowId = null;
+                    isoRows.forEach((row, rowIndex) => {
+                        const rowId = `zzIsoRow${rowIndex}`;
+                        graphDefinition += `    subgraph ${rowId}[" "]\n`;
+                        graphDefinition += `    direction LR\n`;
+                        row.forEach(id => {
+                            graphDefinition += `      ${sanitizeMermaidId(id)};\n`;
+                        });
+                        graphDefinition += `    end\n`;
+                        graphDefinition += `    class ${rowId} zzIsoRowStyle;\n`;
+                        if (previousRowId) {
+                            graphDefinition += `    ${previousRowId} ~~~ ${rowId};\n`;
+                        }
+                        previousRowId = rowId;
+                    });
+                    graphDefinition += `  end\n`;
+                    graphDefinition += `  class zzIsoGroup zzIsoGroupStyle;\n`;
+
+                    if (lastTreeAnchor) {
+                        graphDefinition += `  ${sanitizeMermaidId(lastTreeAnchor)} ~~~ zzIsoGroup;\n`;
+                    }
                 }
 
                 graphDefinition += `\n`;
@@ -872,6 +956,22 @@
             // dark mode - keeps working unchanged, without needing to know which layout is active.
             async function renderRadialLayout(nodesToDraw) {
                 try {
+                    // NO-RELATIVES GROUPING: standalone courses (no prerequisites, and not a
+                    // prerequisite for anything else on screen) used to compete for a wedge of
+                    // the inner ring right alongside real branch roots, each getting its own
+                    // full spoke from the center - the same visual weight as an entire major
+                    // branch, even though it has no actual relationship to anything else in
+                    // the chart. They're pulled out here and placed together in their own ring
+                    // beyond the real tree instead, with no spoke drawn to them at all (they
+                    // have no dependency relationship to draw). See the fallback comment on
+                    // computeIsolatedNodes for the "everything is standalone" edge case.
+                    const rawIsolated = computeIsolatedNodes(nodesToDraw);
+                    const isolatedIds = (rawIsolated.length > 0 && rawIsolated.length < nodesToDraw.length)
+                        ? rawIsolated
+                        : [];
+                    const isolatedSet = new Set(isolatedIds);
+                    const treeIds = nodesToDraw.filter(id => !isolatedSet.has(id));
+
                     // 1. True depth (longest path over ALL prerequisites) - controls radius only.
                     const depthOf = {};
                     const depthVisiting = new Set();
@@ -879,16 +979,16 @@
                         if (depthOf[id] !== undefined) return depthOf[id];
                         if (depthVisiting.has(id)) return 1; // defensive guard against a data cycle
                         depthVisiting.add(id);
-                        const parents = (currentDependencyMap[id] || []).filter(p => nodesToDraw.includes(p));
+                        const parents = (currentDependencyMap[id] || []).filter(p => treeIds.includes(p));
                         const d = parents.length === 0 ? 1 : 1 + Math.max(...parents.map(computeDepth));
                         depthVisiting.delete(id);
                         depthOf[id] = d;
                         return d;
                     }
-                    nodesToDraw.forEach(computeDepth);
+                    treeIds.forEach(computeDepth);
 
                     const rings = {};
-                    nodesToDraw.forEach(id => { (rings[depthOf[id]] = rings[depthOf[id]] || []).push(id); });
+                    treeIds.forEach(id => { (rings[depthOf[id]] = rings[depthOf[id]] || []).push(id); });
                     const maxDepth = Math.max(...Object.keys(rings).map(Number));
 
                     // 2. Primary-parent spanning tree - controls angle only. Preferring a
@@ -896,7 +996,7 @@
                     //    parent keeps the layout following the main line of study; a course whose
                     //    only prerequisites are alternative choose-one options just uses the first.
                     function getPrimaryParent(id) {
-                        const parents = (currentDependencyMap[id] || []).filter(p => nodesToDraw.includes(p));
+                        const parents = (currentDependencyMap[id] || []).filter(p => treeIds.includes(p));
                         if (parents.length === 0) return null;
                         const types = currentDependencyTypes[id] || {};
                         const required = parents.filter(p => types[p] !== 'alternative_dotted');
@@ -904,12 +1004,12 @@
                     }
                     const primaryParentOf = {};
                     const primaryChildrenOf = {};
-                    nodesToDraw.forEach(id => {
+                    treeIds.forEach(id => {
                         const pp = getPrimaryParent(id);
                         primaryParentOf[id] = pp;
                         if (pp) (primaryChildrenOf[pp] = primaryChildrenOf[pp] || []).push(id);
                     });
-                    const rootBranches = nodesToDraw.filter(id => !primaryParentOf[id]);
+                    const rootBranches = treeIds.filter(id => !primaryParentOf[id]);
 
                     // 3. Wedge allocation: each branch's angular width is proportional to how
                     //    many courses ultimately hang off it (a "sunburst" subdivision), so a
@@ -943,12 +1043,15 @@
                     // 4. Radius per depth ring - grows with depth as before, but also grows
                     //    further whenever a ring's narrowest angular gap is too tight for a
                     //    node to actually fit there, so tightly-wedged deep branches don't
-                    //    collide with their own siblings.
-                    const nodeCount = nodesToDraw.length;
+                    //    collide with their own siblings. Based on the real tree's size (not
+                    //    the standalone group), same reasoning as the Root-Top spacing fix -
+                    //    a small tree with a long list of unrelated electives shouldn't be
+                    //    squeezed down to fit a much bigger number that isn't its own shape.
+                    const nodeCount = treeIds.length;
                     let ringSpacing = 170;
-                    if (nodeCount > 45) ringSpacing = 115;
-                    else if (nodeCount > 25) ringSpacing = 135;
-                    else if (nodeCount > 15) ringSpacing = 155;
+                    if (nodeCount > 45) ringSpacing = 120;
+                    else if (nodeCount > 25) ringSpacing = 140;
+                    else if (nodeCount > 15) ringSpacing = 158;
 
                     const nodeW = 168, nodeH = 56;
                     const baseRadius = ringSpacing * 1.35;
@@ -973,15 +1076,37 @@
                         prevRadius = r;
                     }
 
-                    const maxRadius = radiusOf[maxDepth] + nodeW;
+                    // NO-RELATIVES RING: one extra ring beyond the deepest real course, holding
+                    // every standalone course evenly spaced around the full circle - a single
+                    // consistent "halo" spot instead of being mixed into the inner ring's
+                    // meaningful entry-point courses. Grows further (same as the real rings
+                    // above) whenever there are too many standalone courses for the naive
+                    // radius to give each one enough arc length to avoid crowding.
+                    const isoAngleOf = {};
+                    isolatedIds.forEach((id, i) => {
+                        isoAngleOf[id] = (2 * Math.PI * i) / isolatedIds.length;
+                    });
+                    let isoRingRadius = 0;
+                    if (isolatedIds.length > 0) {
+                        const naiveIsoRadius = radiusOf[maxDepth] + ringSpacing;
+                        const isoMinGap = isolatedIds.length > 1 ? (2 * Math.PI / isolatedIds.length) : (2 * Math.PI);
+                        const isoNeededByArc = (nodeW + 24) / Math.max(isoMinGap, 0.02);
+                        isoRingRadius = Math.max(naiveIsoRadius, isoNeededByArc);
+                    }
+
+                    const maxRadius = Math.max(radiusOf[maxDepth], isoRingRadius) + nodeW;
                     const canvasSize = Math.ceil(maxRadius * 2 + 80);
                     const cx = canvasSize / 2, cy = canvasSize / 2;
 
                     const posOf = {};
-                    nodesToDraw.forEach(id => {
+                    treeIds.forEach(id => {
                         const r = radiusOf[depthOf[id]];
                         const a = angleOf[id] - Math.PI / 2; // rotate so branches fan out from the top
                         posOf[id] = { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+                    });
+                    isolatedIds.forEach(id => {
+                        const a = isoAngleOf[id] - Math.PI / 2;
+                        posOf[id] = { x: cx + isoRingRadius * Math.cos(a), y: cy + isoRingRadius * Math.sin(a) };
                     });
 
                     // 5. Build the SVG. Edges are drawn first so the node rectangles painted
@@ -991,6 +1116,15 @@
                     svg += `<defs><marker id="radialArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="radial-arrow-head"></path></marker></defs>`;
 
                     svg += `<g class="radial-edges">`;
+                    // NO-RELATIVES RING GUIDE: a faint dashed circle + label marks the halo of
+                    // standalone courses as a deliberate group, the same way Root-Top wraps them
+                    // in a labeled box - no spokes are drawn to them since they have no actual
+                    // dependency relationship to show.
+                    if (isolatedIds.length > 0) {
+                        svg += `<circle class="radial-iso-ring" cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${isoRingRadius.toFixed(1)}" fill="none"></circle>`;
+                        const labelR = isoRingRadius - nodeH / 2 - 14;
+                        svg += `<foreignObject x="${(cx - 110).toFixed(1)}" y="${(cy - labelR - 22).toFixed(1)}" width="220" height="20"><div xmlns="http://www.w3.org/1999/xhtml" class="radial-iso-ring-label">No Prerequisites (${isolatedIds.length})</div></foreignObject>`;
+                    }
                     // Spokes from the center Major Title node out to every entry-point (branch root) course
                     rootBranches.forEach(id => {
                         const p = posOf[id];
@@ -1039,7 +1173,8 @@
                     nodesToDraw.forEach(id => {
                         const safeId = sanitizeMermaidId(id);
                         const p = posOf[id];
-                        svg += `<g class="node" id="flowchart-${safeId}-radial" transform="translate(${(p.x - nodeW / 2).toFixed(1)},${(p.y - nodeH / 2).toFixed(1)})">`;
+                        const isoClass = isolatedSet.has(id) ? ' isolated-node' : '';
+                        svg += `<g class="node${isoClass}" id="flowchart-${safeId}-radial" transform="translate(${(p.x - nodeW / 2).toFixed(1)},${(p.y - nodeH / 2).toFixed(1)})">`;
                         svg += `<rect width="${nodeW}" height="${nodeH}" rx="8"></rect>`;
                         svg += `<foreignObject width="${nodeW}" height="${nodeH}"><div xmlns="http://www.w3.org/1999/xhtml" class="radial-node-label">${buildNodeLabel(id)}</div></foreignObject>`;
                         svg += `</g>`;
